@@ -6,8 +6,8 @@ const audio = require('../../utils/audio.js');
 
 Page({
   data: { records: [], loginUser: null, isLoading: false, settings: {} },
-  onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData() },
-  onShow() { this.loadData() },
+  onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData(); },
+  onShow() { this.loadData(); },
   
   async loadData() {
     const loginUser = storage.getLoginUser();
@@ -17,22 +17,18 @@ Page({
 
     wx.showNavigationBarLoading();
     try {
-      // 1. 云端优先获取数据
       const res = await api.getUserSavedWords(userId);
       if (res && res.data) {
         const records = res.data.map(item => ({
-          ...item,
-          word: item.word || item.name,
+          ...item, word: item.word || item.name,
           trans: typeof item.trans === 'string' ? item.trans.split('\n') : (item.trans || [])
         }));
         this.setData({ records, isLoading: false });
         return;
       }
-    } catch (err) {
-      console.error('云端获取生词失败，降级本地:', err);
-    } finally { wx.hideNavigationBarLoading(); }
+    } catch (err) { console.error('云端获取生词失败:', err); } 
+    finally { wx.hideNavigationBarLoading(); }
 
-    // 2. Fallback 降级读取本地
     const records = storage.getSavedWordsByUser(userId);
     this.setData({ records, isLoading: false });
   },
@@ -54,17 +50,12 @@ Page({
     const item = e.currentTarget.dataset.item;
     const userId = this.data.loginUser.userId;
     const wordName = item.word || item.name;
-    const transStr = Array.isArray(item.trans) ? item.trans.join(',') : (item.trans || '');
+    const transStr = Array.isArray(item.trans) ? item.trans.join(',') : (item.trans || '暂无释义');
 
     wx.showLoading({ title: '加入练习中...' });
     try {
-      // 修复 500 报错：确保字段 trans 和 dictId 不为空
-      await api.addErrorWord({
-        userId: userId,
-        word: wordName,
-        trans: transStr || '暂无释义', 
-        dictId: 'saved' 
-      });
+      // 对齐 ErrorController，防 500
+      await api.addErrorWord({ userId: userId, word: wordName, trans: transStr, dictId: 'saved' });
       storage.addErrorWord({ name: wordName, trans: item.trans }, 'saved', userId);
       wx.hideLoading();
       wx.showToast({ title: '已加入错题本', icon: 'success' });
@@ -77,10 +68,6 @@ Page({
     }
   },
 
-  playSound(e) {
-    const word = e.currentTarget.dataset.word;
-    audio.playPronunciation(word, this.data.settings.pronunciationType || 'uk').catch(() => console.log('播放失败'));
-  },
-
+  playSound(e) { const word = e.currentTarget.dataset.word; audio.playPronunciation(word, this.data.settings.pronunciationType || 'uk').catch(() => {}); },
   goBack() { wx.navigateBack({ delta: 1 }) }
 })

@@ -32,10 +32,7 @@ Page({
     this.loadChapter();
   },
 
-  getCurrentUserId() {
-    return this.data.loginUser && this.data.loginUser.userId ? this.data.loginUser.userId : '';
-  },
-
+  getCurrentUserId() { return this.data.loginUser && this.data.loginUser.userId ? this.data.loginUser.userId : ''; },
   async syncSnapshot() { await snapshot.syncSnapshot() },
 
   loadDictList() {
@@ -48,15 +45,9 @@ Page({
   loadChapter() {
     const { dictId, chapter } = this.data;
     const dictInfo = dictUtil.getDictInfo(dictId);
-    if (!dictInfo) {
-      this.setData({ currentWord: null, chapterWords: [], totalWords: 0, totalChapters: 0, showResult: false, loading: false, emptyTip: '未找到该词典，请返回词库中心重新选择。', isFavorite: false });
-      return;
-    }
+    if (!dictInfo) { this.setData({ currentWord: null, chapterWords: [], totalWords: 0, totalChapters: 0, showResult: false, loading: false, emptyTip: '未找到该词典，请返回词库中心重新选择。', isFavorite: false }); return; }
     const words = dictUtil.getChapterWords(dictId, chapter);
-    if (words.length === 0) {
-      this.setData({ currentWord: null, chapterWords: [], totalWords: 0, totalChapters: dictInfo.totalChapters, showResult: false, loading: false, emptyTip: '当前章节暂无单词，请切换章节。', isFavorite: false });
-      return;
-    }
+    if (words.length === 0) { this.setData({ currentWord: null, chapterWords: [], totalWords: 0, totalChapters: dictInfo.totalChapters, showResult: false, loading: false, emptyTip: '当前章节暂无单词，请切换章节。', isFavorite: false }); return; }
     this.setData({ dictName: dictInfo.name, totalChapters: dictInfo.totalChapters, totalWords: words.length, chapterWords: words, currentWordIndex: 0, currentWord: words[0], inputValue: '', correctCount: 0, wrongCount: 0, showResult: false, loading: false, emptyTip: '' });
     this.updateCurrentWordDisplay();
     this.updateLetterStates();
@@ -75,24 +66,18 @@ Page({
     const { currentWord, isFavorite } = this.data;
     if (!currentWord) return;
     const userId = this.getCurrentUserId();
-    const payload = { userId, word: currentWord.name };
+    // 完美对齐后端 Controller 要求的字段
+    const payload = { userId, wordId: 0, word: currentWord.name, trans: Array.isArray(currentWord.trans) ? currentWord.trans.join(';') : (currentWord.trans || '暂无释义') };
 
-    // UI 乐观更新
     this.setData({ isFavorite: !isFavorite });
     wx.showToast({ title: !isFavorite ? '已收藏' : '已取消收藏', icon: 'success' });
 
     try {
-      if (!isFavorite) {
-        // DB-First 写入
-        await api.addFavorite(payload);
-      } else {
-        // 取消收藏（交由快照处理或后台接口支持后再完善）
-        snapshot.syncSnapshot();
-      }
-      storage.toggleFavorite(currentWord, userId); // 维护本地缓存
+      if (!isFavorite) { await api.addFavorite(payload); } 
+      else { snapshot.syncSnapshot(); }
+      storage.toggleFavorite(currentWord, userId);
     } catch (err) {
       console.error('收藏云端同步失败:', err);
-      // Fallback 退回本地，并交由快照处理
       storage.toggleFavorite(currentWord, userId);
       snapshot.syncSnapshot();
     }
@@ -101,36 +86,11 @@ Page({
   goBackToGallery() { wx.redirectTo({ url: '/pages/gallery/gallery' }) },
   switchDict() { this.setData({ showSidebar: true }) },
   toggleSidebar() { this.setData({ showSidebar: !this.data.showSidebar }) },
-
-  toggleDictExpand(e) {
-    const dictId = e.currentTarget.dataset.id;
-    const dictList = this.data.dictList.map(item => item.id === dictId ? { ...item, expanded: !item.expanded } : item);
-    this.setData({ dictList });
-  },
-
-  onSidebarSelectChapter(e) {
-    const dictId = e.currentTarget.dataset.dictid;
-    const chapter = Number(e.currentTarget.dataset.chapter || 0);
-    storage.updateSettings({ currentDictId: dictId, currentChapter: chapter });
-    this.setData({ dictId, chapter, showSidebar: false });
-    this.loadChapter();
-    this.syncSnapshot();
-  },
-
-  switchMaskingMode() {
-    const maskingMode = (this.data.maskingMode + 1) % this.data.maskingModes.length;
-    this.setData({ maskingMode });
-    storage.updateSettings({ maskingMode });
-    this.updateCurrentWordDisplay();
-  },
-
-  switchTranslationMode() {
-    const next = !this.data.settings.isShowTranslation;
-    const settings = { ...this.data.settings, isShowTranslation: next };
-    this.setData({ settings });
-    storage.saveSettings(settings);
-  },
-
+  toggleDictExpand(e) { const dictId = e.currentTarget.dataset.id; const dictList = this.data.dictList.map(item => item.id === dictId ? { ...item, expanded: !item.expanded } : item); this.setData({ dictList }); },
+  onSidebarSelectChapter(e) { const dictId = e.currentTarget.dataset.dictid; const chapter = Number(e.currentTarget.dataset.chapter || 0); storage.updateSettings({ currentDictId: dictId, currentChapter: chapter }); this.setData({ dictId, chapter, showSidebar: false }); this.loadChapter(); this.syncSnapshot(); },
+  switchMaskingMode() { const maskingMode = (this.data.maskingMode + 1) % this.data.maskingModes.length; this.setData({ maskingMode }); storage.updateSettings({ maskingMode }); this.updateCurrentWordDisplay(); },
+  switchTranslationMode() { const next = !this.data.settings.isShowTranslation; const settings = { ...this.data.settings, isShowTranslation: next }; this.setData({ settings }); storage.saveSettings(settings); },
+  
   updateCurrentWordDisplay() {
     const { currentWord, maskingMode } = this.data;
     if (!currentWord) return;
@@ -167,37 +127,23 @@ Page({
     const userId = this.getCurrentUserId();
     const nextCorrectCount = correctCount + 1;
 
-    // 如果是本章最后一个单词，执行结算 DB-First
     if (currentWordIndex + 1 >= chapterWords.length) {
       const accuracy = Math.round(((correctCount + 1) / chapterWords.length) * 100);
-      const payload = { userId, dictId, dictName: this.data.dictName, chapter, totalWords: chapterWords.length, accuracy };
+      // 完美对齐 StudyRecordController 要求
+      const payload = { userId, categoryName: this.data.dictName || '日常练习', totalWords: chapterWords.length, accuracy };
 
       wx.showLoading({ title: '结算中...' });
-      try {
-        await api.addStudyRecord(payload);
-      } catch (err) {
-        console.error('学习记录上传云端失败，降级本地:', err);
-        storage.addStudyRecord(payload);
-        snapshot.syncSnapshot();
-      } finally {
-        wx.hideLoading();
-      }
+      try { await api.addStudyRecord(payload); } 
+      catch (err) { console.error('结算同步失败:', err); storage.addStudyRecord(payload); snapshot.syncSnapshot(); } 
+      finally { wx.hideLoading(); }
 
-      // 维护本地进度缓存
       storage.updateWordProgress(dictId, chapter, currentWordIndex + 1, userId);
       storage.markChapterCompleted(dictId, chapter, userId);
-
       this.setData({ correctCount: nextCorrectCount, currentWord: null, showResult: true, isFavorite: false });
       return;
     }
 
-    // 切换到下一个单词的核心逻辑
-    this.setData({
-      correctCount: nextCorrectCount,
-      currentWordIndex: currentWordIndex + 1,
-      currentWord: chapterWords[currentWordIndex + 1],
-      inputValue: ''
-    });
+    this.setData({ correctCount: nextCorrectCount, currentWordIndex: currentWordIndex + 1, currentWord: chapterWords[currentWordIndex + 1], inputValue: '' });
     this.updateCurrentWordDisplay();
     this.updateLetterStates();
     this.updateFavoriteState();
@@ -210,26 +156,18 @@ Page({
     if (!currentWord) return;
     const userId = this.getCurrentUserId();
 
-    // 异步执行错题 DB-First（不阻塞打字流程）
-    api.addErrorWord({ userId, dictId, word: currentWord.name }).catch(err => {
-      console.error('错题上传云端失败，转本地:', err);
-      storage.addErrorWord(currentWord, dictId, userId); // 兜底
+    // 完美对齐 ErrorController 要求
+    const transStr = Array.isArray(currentWord.trans) ? currentWord.trans.join(';') : (currentWord.trans || '暂无释义');
+    api.addErrorWord({ userId, dictId, word: currentWord.name, trans: transStr }).catch(err => {
+      console.error('错题上传云端失败:', err);
+      storage.addErrorWord(currentWord, dictId, userId);
       snapshot.syncSnapshot();
     });
 
     const nextWrongCount = wrongCount + 1;
-    if (currentWordIndex + 1 >= chapterWords.length) {
-      this.setData({ wrongCount: nextWrongCount, currentWord: null, showResult: true, isFavorite: false });
-      return;
-    }
+    if (currentWordIndex + 1 >= chapterWords.length) { this.setData({ wrongCount: nextWrongCount, currentWord: null, showResult: true, isFavorite: false }); return; }
 
-    // 错题跳过时，切换到下一个单词的核心逻辑
-    this.setData({
-      wrongCount: nextWrongCount,
-      currentWordIndex: currentWordIndex + 1,
-      currentWord: chapterWords[currentWordIndex + 1],
-      inputValue: ''
-    });
+    this.setData({ wrongCount: nextWrongCount, currentWordIndex: currentWordIndex + 1, currentWord: chapterWords[currentWordIndex + 1], inputValue: '' });
     this.updateCurrentWordDisplay();
     this.updateLetterStates();
     this.updateFavoriteState();
@@ -237,27 +175,7 @@ Page({
     this.syncSnapshot();
   },
 
-  playSound() {
-    const { currentWord, settings } = this.data;
-    if (!currentWord) return;
-    audio.playPronunciation(currentWord.name, settings.pronunciationType).catch(err => { console.error('播放发音失败:', err) });
-  },
-
-  nextChapter() {
-    const nextChapter = this.data.chapter + 1;
-    const dictInfo = dictUtil.getDictInfo(this.data.dictId);
-    if (!dictInfo || nextChapter >= dictInfo.totalChapters) {
-      wx.showToast({ title: '已经是最后一章', icon: 'none' });
-      return;
-    }
-    storage.updateSettings({ currentDictId: this.data.dictId, currentChapter: nextChapter });
-    this.setData({ chapter: nextChapter });
-    this.loadChapter();
-    this.syncSnapshot();
-  },
-
-  loadChapterManually() {
-    this.loadChapter();
-    this.syncSnapshot();
-  }
+  playSound() { const { currentWord, settings } = this.data; if (!currentWord) return; audio.playPronunciation(currentWord.name, settings.pronunciationType).catch(() => {}); },
+  nextChapter() { const nextChapter = this.data.chapter + 1; const dictInfo = dictUtil.getDictInfo(this.data.dictId); if (!dictInfo || nextChapter >= dictInfo.totalChapters) { wx.showToast({ title: '已经是最后一章', icon: 'none' }); return; } storage.updateSettings({ currentDictId: this.data.dictId, currentChapter: nextChapter }); this.setData({ chapter: nextChapter }); this.loadChapter(); this.syncSnapshot(); },
+  loadChapterManually() { this.loadChapter(); this.syncSnapshot(); }
 })

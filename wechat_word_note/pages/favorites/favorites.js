@@ -6,8 +6,8 @@ const audio = require('../../utils/audio.js');
 
 Page({
   data: { records: [], loginUser: null, isLoading: false, settings: {} },
-  onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData() },
-  onShow() { this.loadData() },
+  onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData(); },
+  onShow() { this.loadData(); },
 
   async loadData() {
     const loginUser = storage.getLoginUser();
@@ -17,17 +17,14 @@ Page({
 
     wx.showNavigationBarLoading();
     try {
-      // DB-first 读取收藏数据
       const res = await api.getUserFavorites(userId);
       if (res && res.data) {
         this.setData({ records: res.data, isLoading: false });
         return;
       }
-    } catch (err) {
-      console.error('获取收藏失败:', err);
-    } finally { wx.hideNavigationBarLoading(); }
+    } catch (err) { console.error('获取收藏失败:', err); } 
+    finally { wx.hideNavigationBarLoading(); }
 
-    // Fallback 降级
     const records = storage.getFavoritesByUser(userId);
     this.setData({ records, isLoading: false });
   },
@@ -49,6 +46,5 @@ Page({
     const word = e.currentTarget.dataset.word;
     audio.playPronunciation(word, this.data.settings.pronunciationType || 'uk').catch(() => {});
   },
-
   goBack() { wx.navigateBack({ delta: 1 }) }
 })

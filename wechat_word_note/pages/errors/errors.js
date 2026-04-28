@@ -16,19 +16,14 @@ Page({
 
     wx.showNavigationBarLoading();
     try {
-      // DB-first 读取错题本
       const res = await api.getUserErrors(userId);
       if (res && res.data) {
         this.setData({ records: res.data, isLoading: false });
         return;
       }
-    } catch (err) {
-      console.error('获取云端错题失败:', err);
-    } finally {
-      wx.hideNavigationBarLoading();
-    }
+    } catch (err) { console.error('获取错题失败:', err); } 
+    finally { wx.hideNavigationBarLoading(); }
     
-    // Fallback 降级
     const records = storage.getErrorsByUser(userId);
     this.setData({ records, isLoading: false });
   },
@@ -46,6 +41,5 @@ Page({
     }
     this.loadData();
   },
-
   goBack() { wx.navigateBack({ delta: 1 }) }
 })
