@@ -5,14 +5,25 @@ const snapshot = require('../../utils/snapshot.js');
 const audio = require('../../utils/audio.js');
 
 function extractList(res) {
-  if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.data)) return res.data;
-  if (res && res.data && Array.isArray(res.data.data)) return res.data.data;
-  return null;
+  let data = res;
+  if (typeof res === 'string') try { data = JSON.parse(res); } catch (e) {}
+  else if (res && typeof res.data === 'string') try { data = JSON.parse(res.data); } catch (e) {}
+
+  let list = [];
+  if (Array.isArray(data)) list = data;
+  else if (data && Array.isArray(data.data)) list = data.data;
+  else if (res && res.data && Array.isArray(res.data)) list = res.data;
+  
+  return list.map(rawItem => {
+    if (typeof rawItem === 'string' && rawItem.trim().startsWith('{')) {
+      try { return JSON.parse(rawItem); } catch (e) { return {}; }
+    }
+    return rawItem;
+  });
 }
 
 Page({
-  data: { errorWords: [], loginUser: null, isLoading: false, sortType: 'wrongCount', settings: {} },
+  data: { errorWords: [], records: [], errors: [], loginUser: null, isLoading: false, sortType: 'wrongCount', settings: {} },
   onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData() },
   onShow() { this.loadData() },
 
@@ -26,23 +37,26 @@ Page({
     try {
       const res = await api.getUserErrors(userId);
       const list = extractList(res);
-      if (list) {
-        const errorWords = list.map(rawItem => {
-           const item = typeof rawItem === 'string' ? JSON.parse(rawItem) : rawItem;
-           return {
-             ...item,
-             trans: typeof item.trans === 'string' ? item.trans.split(/[;\n,]/).filter(Boolean) : (item.trans || [])
-           };
-        });
-        this.setData({ errorWords, isLoading: false });
+      if (list && list.length > 0) {
+        const errorWords = list.map(item => ({
+           ...item,
+           trans: typeof item.trans === 'string' ? item.trans.split(/[;\n,]/).filter(Boolean) : (item.trans || [])
+        }));
+        // 核心修复：注入多重别名防止 WXML 找错对象
+        this.setData({ errorWords, records: errorWords, errors: errorWords, isLoading: false });
         this.sortData(); 
         return;
       }
     } catch (err) { console.error('获取错题失败:', err); } 
     finally { wx.hideNavigationBarLoading(); }
     
-    const fallbackRecords = storage.getErrorWordsByUser(userId);
-    this.setData({ errorWords: fallbackRecords, isLoading: false });
+    // 安全获取本地存储，兼容两种可能存在的方法名
+    const localErr = storage.getErrorsByUser ? storage.getErrorsByUser(userId) : (storage.getErrorWordsByUser ? storage.getErrorWordsByUser(userId) : []);
+    const fallbackRecords = localErr.map(item => ({
+       ...item,
+       trans: typeof item.trans === 'string' ? item.trans.split(/[;\n,]/).filter(Boolean) : (item.trans || [])
+    }));
+    this.setData({ errorWords: fallbackRecords, records: fallbackRecords, errors: fallbackRecords, isLoading: false });
     this.sortData();
   },
 
@@ -56,10 +70,11 @@ Page({
 
     try {
       if (item && item.id) await api.deleteErrorWord(item.id);
-      // 修复：改为 storage.deleteErrorWord，且补齐三个参数
-      storage.deleteErrorWord(word, dictId, loginUser.userId);
+      if (storage.deleteErrorWord) storage.deleteErrorWord(word, dictId, loginUser.userId);
+      else if (storage.removeErrorWord) storage.removeErrorWord(word, loginUser.userId);
     } catch(err) {
-      storage.deleteErrorWord(word, dictId, loginUser.userId);
+      if (storage.deleteErrorWord) storage.deleteErrorWord(word, dictId, loginUser.userId);
+      else if (storage.removeErrorWord) storage.removeErrorWord(word, loginUser.userId);
       snapshot.syncSnapshot();
     }
     this.loadData();
@@ -72,8 +87,8 @@ Page({
       title: '清空错题本', content: '确定要清空所有错题记录吗？',
       success: async (res) => {
         if (res.confirm) {
-           // 修复：原误写为 clearErrors，应为 clearErrorWords
-           storage.clearErrorWords();
+           if (storage.clearErrorWords) storage.clearErrorWords();
+           else if (storage.clearErrors) storage.clearErrors(self.data.loginUser.userId);
            self.loadData();
         }
       }
@@ -110,7 +125,7 @@ Page({
       } else { 
          arr.sort((a,b) => new Date(String(b.lastWrongAt || b.created_at || '').replace(/-/g, '/')).getTime() - new Date(String(a.lastWrongAt || a.created_at || '').replace(/-/g, '/')).getTime()); 
       }
-      this.setData({ errorWords: arr });
+      this.setData({ errorWords: arr, records: arr, errors: arr });
   },
 
   goBack() { wx.navigateBack({ delta: 1 }) },

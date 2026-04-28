@@ -3,23 +3,34 @@ const storage = require('../../utils/storage.js');
 const api = require('../../utils/api.js');
 
 function extractList(res) {
-  if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.data)) return res.data;
-  if (res && res.data && Array.isArray(res.data.data)) return res.data.data;
-  return null;
+  let data = res;
+  if (typeof res === 'string') try { data = JSON.parse(res); } catch (e) {}
+  else if (res && typeof res.data === 'string') try { data = JSON.parse(res.data); } catch (e) {}
+
+  let list = [];
+  if (Array.isArray(data)) list = data;
+  else if (data && Array.isArray(data.data)) list = data.data;
+  else if (res && res.data && Array.isArray(res.data)) list = res.data;
+  
+  return list.map(rawItem => {
+    if (typeof rawItem === 'string' && rawItem.trim().startsWith('{')) {
+      try { return JSON.parse(rawItem); } catch (e) { return {}; }
+    }
+    return rawItem;
+  });
 }
 
-// 终极杀手锏：解决 iOS 和微信引擎下解析 "YYYY-MM-DD" 报错导致不显示的问题
 function safeFormatTime(timeStr) {
-  if (!timeStr) return '';
+  if (!timeStr) return '刚刚';
   const safeStr = String(timeStr).replace(/-/g, '/'); 
   const date = new Date(safeStr);
   if (isNaN(date.getTime())) return timeStr; 
-  return date.toLocaleString();
+  // 优化时间显示格式
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
 }
 
 Page({
-  data: { records: [], loginUser: null, isLoading: false },
+  data: { records: [], historyList: [], loginUser: null, isLoading: false },
   onLoad() { this.loadData() },
   onShow() { this.loadData() },
 
@@ -33,17 +44,14 @@ Page({
     try {
       const res = await api.getUserStudyRecords(userId);
       const list = extractList(res);
-      if (list) {
-        const records = list.map(rawItem => {
-          // 核心修复：防止 Java 后端返回的 List<String> 导致字段 undefined
-          const item = typeof rawItem === 'string' ? JSON.parse(rawItem) : rawItem;
-          return {
-            ...item,
-            dictName: item.categoryName || item.dictName || '练习记录',
-            timeText: safeFormatTime(item.createdAt || item.created_at)
-          };
-        });
-        this.setData({ records, isLoading: false });
+      if (list && list.length > 0) {
+        const records = list.map(item => ({
+          ...item,
+          dictName: item.categoryName || item.dictName || '日常练习',
+          timeText: safeFormatTime(item.createdAt || item.created_at)
+        }));
+        // 核心修复：注入多重别名防止 WXML 找错对象
+        this.setData({ records, historyList: records, isLoading: false });
         return;
       }
     } catch (err) { console.error('获取历史记录失败:', err); } 
@@ -51,10 +59,10 @@ Page({
 
     const fallbackRecords = storage.getStudyRecordsByUser(userId).map(item => ({
       ...item, 
-      dictName: item.dictName || '练习记录',
-      timeText: safeFormatTime(item.createdAt)
+      dictName: item.categoryName || item.dictName || '日常练习',
+      timeText: safeFormatTime(item.createdAt || item.created_at)
     }));
-    this.setData({ records: fallbackRecords, isLoading: false });
+    this.setData({ records: fallbackRecords, historyList: fallbackRecords, isLoading: false });
   },
 
   goHome() { wx.reLaunch({ url: '/pages/gallery/gallery' }) },
