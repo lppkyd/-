@@ -1,33 +1,54 @@
 // pages/favorites/favorites.js
-const storage = require('../../utils/storage.js')
-const audio = require('../../utils/audio.js')
-const api = require('../../utils/api.js')
+const storage = require('../../utils/storage.js');
+const api = require('../../utils/api.js');
+const snapshot = require('../../utils/snapshot.js');
+const audio = require('../../utils/audio.js');
 
 Page({
-  data: { favorites: [], loginUser: null },
-  onLoad() { this.loadData() },
+  data: { records: [], loginUser: null, isLoading: false, settings: {} },
+  onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData() },
   onShow() { this.loadData() },
+
   async loadData() {
-    const loginUser = storage.getLoginUser()
-    const userId = loginUser && loginUser.userId ? loginUser.userId : ''
-    if (!userId) return this.setData({ favorites: [], loginUser })
+    const loginUser = storage.getLoginUser();
+    const userId = loginUser && loginUser.userId ? loginUser.userId : '';
+    this.setData({ loginUser, isLoading: true });
+    if (!userId) { this.setData({ isLoading: false }); return; }
+
+    wx.showNavigationBarLoading();
     try {
-      const res = await api.getUserFavorites(userId)
-      const favorites = (res.data || []).map(item => ({ ...item, transText: item.trans }))
-      this.setData({ favorites, loginUser })
-    } catch (e) {
-      this.setData({ favorites: [], loginUser })
-    }
+      // DB-first 读取收藏数据
+      const res = await api.getUserFavorites(userId);
+      if (res && res.data) {
+        this.setData({ records: res.data, isLoading: false });
+        return;
+      }
+    } catch (err) {
+      console.error('获取收藏失败:', err);
+    } finally { wx.hideNavigationBarLoading(); }
+
+    // Fallback 降级
+    const records = storage.getFavoritesByUser(userId);
+    this.setData({ records, isLoading: false });
   },
-  playSound(e) { const word = e.currentTarget.dataset.word; audio.playPronunciation(word, storage.getSettings().pronunciationType).catch(err => { console.error('播放发音失败:', err) }) },
+
   async removeFavorite(e) {
-    const id = e.currentTarget.dataset.id
-    if (!id) return
-    await api.deleteFavorite(id)
-    this.loadData()
-    wx.showToast({ title: '已取消收藏', icon: 'success' })
+    const item = e.currentTarget.dataset.item;
+    const userId = this.data.loginUser.userId;
+    try {
+      if (item.id) await api.deleteFavorite(item.id);
+      storage.toggleFavorite({ name: item.word }, userId);
+    } catch(err) {
+      storage.toggleFavorite({ name: item.word }, userId);
+      snapshot.syncSnapshot();
+    }
+    this.loadData();
   },
-  goHome() { wx.reLaunch({ url: '/pages/gallery/gallery' }) },
-  goBack() { wx.navigateBack({ delta: 1 }) },
-  goLogout() { storage.clearLoginSession(); wx.reLaunch({ url: '/pages/login/login' }) },
+
+  playSound(e) {
+    const word = e.currentTarget.dataset.word;
+    audio.playPronunciation(word, this.data.settings.pronunciationType || 'uk').catch(() => {});
+  },
+
+  goBack() { wx.navigateBack({ delta: 1 }) }
 })

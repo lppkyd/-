@@ -34,6 +34,21 @@ public class ErrorController implements HttpHandler {
                 JsonResponses.write(exchange, 200, service.addErrorWord(userId, word, trans, dictId) ? "{\"success\":true}" : "{\"success\":false}");
                 return;
             }
+            if ("POST".equals(method)) {
+                String body = readBody(exchange.getRequestBody());
+                int userId = QueryParser.getJsonInt(body, "userId", 0);
+                String word = QueryParser.getJsonString(body, "word");
+
+                // 增加判空防御，防止前端少传字段引发 500 报错
+                String trans = QueryParser.getJsonString(body, "trans");
+                if (trans == null) trans = "暂无释义";
+
+                String dictId = QueryParser.getJsonString(body, "dictId");
+                if (dictId == null) dictId = "custom";
+
+                JsonResponses.write(exchange, 200, service.addErrorWord(userId, word, trans, dictId) ? "{\"success\":true}" : "{\"success\":false}");
+                return;
+            }
             JsonResponses.write(exchange, 405, "{\"success\":false,\"message\":\"Method Not Allowed\"}");
         } catch (Exception e) {
             JsonResponses.write(exchange, 500, "{\"success\":false,\"message\":\"获取错题本失败\"}");
