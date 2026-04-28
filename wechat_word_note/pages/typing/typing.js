@@ -12,14 +12,20 @@ Page({
     correctCount: 0, wrongCount: 0, showResult: false, showSidebar: false,
     dictList: [], settings: {}, loginUser: null, loginRole: '', maskingMode: 0,
     maskingModes: ['正常显示', '单词遮盖', '中文遮盖'], visibilityMask: [],
-    letterStates: [], displayWord: '', loading: true, emptyTip: '', isFavorite: false
+    letterStates: [], displayWord: '', loading: true, emptyTip: '', isFavorite: false,
+    hasSavedRecord: false // 用于防止重复结算
   },
 
   async onLoad(options) { await this.initPage(options) },
   async onShow() { await this.initPage() },
 
+  // 核心完善：监听页面卸载（用户点击左上角返回或退出中途）
+  onUnload() {
+    this.saveStudyRecord(false); // 中途退出也自动保存学习记录！
+  },
+
   async initPage(options = {}) {
-    this.setData({ loading: true });
+    this.setData({ loading: true, hasSavedRecord: false });
     await dictUtil.refreshRemoteData();
     this.loadDictList();
     const settings = storage.getSettings();
@@ -48,7 +54,7 @@ Page({
     if (!dictInfo) { this.setData({ currentWord: null, chapterWords: [], totalWords: 0, totalChapters: 0, showResult: false, loading: false, emptyTip: '未找到该词典，请返回词库中心重新选择。', isFavorite: false }); return; }
     const words = dictUtil.getChapterWords(dictId, chapter);
     if (words.length === 0) { this.setData({ currentWord: null, chapterWords: [], totalWords: 0, totalChapters: dictInfo.totalChapters, showResult: false, loading: false, emptyTip: '当前章节暂无单词，请切换章节。', isFavorite: false }); return; }
-    this.setData({ dictName: dictInfo.name, totalChapters: dictInfo.totalChapters, totalWords: words.length, chapterWords: words, currentWordIndex: 0, currentWord: words[0], inputValue: '', correctCount: 0, wrongCount: 0, showResult: false, loading: false, emptyTip: '' });
+    this.setData({ dictName: dictInfo.name, totalChapters: dictInfo.totalChapters, totalWords: words.length, chapterWords: words, currentWordIndex: 0, currentWord: words[0], inputValue: '', correctCount: 0, wrongCount: 0, showResult: false, loading: false, emptyTip: '', hasSavedRecord: false });
     this.updateCurrentWordDisplay();
     this.updateLetterStates();
     this.updateFavoriteState();
@@ -76,40 +82,9 @@ Page({
       else { snapshot.syncSnapshot(); }
       storage.toggleFavorite(currentWord, userId);
     } catch (err) {
-      console.error('收藏云端同步失败:', err);
       storage.toggleFavorite(currentWord, userId);
       snapshot.syncSnapshot();
     }
-  },
-
-  goBackToGallery() { wx.redirectTo({ url: '/pages/gallery/gallery' }) },
-  switchDict() { this.setData({ showSidebar: true }) },
-  toggleSidebar() { this.setData({ showSidebar: !this.data.showSidebar }) },
-  toggleDictExpand(e) { const dictId = e.currentTarget.dataset.id; const dictList = this.data.dictList.map(item => item.id === dictId ? { ...item, expanded: !item.expanded } : item); this.setData({ dictList }); },
-  onSidebarSelectChapter(e) { const dictId = e.currentTarget.dataset.dictid; const chapter = Number(e.currentTarget.dataset.chapter || 0); storage.updateSettings({ currentDictId: dictId, currentChapter: chapter }); this.setData({ dictId, chapter, showSidebar: false }); this.loadChapter(); this.syncSnapshot(); },
-  switchMaskingMode() { const maskingMode = (this.data.maskingMode + 1) % this.data.maskingModes.length; this.setData({ maskingMode }); storage.updateSettings({ maskingMode }); this.updateCurrentWordDisplay(); },
-  switchTranslationMode() { const next = !this.data.settings.isShowTranslation; const settings = { ...this.data.settings, isShowTranslation: next }; this.setData({ settings }); storage.saveSettings(settings); },
-  
-  updateCurrentWordDisplay() {
-    const { currentWord, maskingMode } = this.data;
-    if (!currentWord) return;
-    let displayWord = currentWord.name;
-    if (maskingMode === 1) displayWord = '□□□□□□';
-    if (maskingMode === 2) displayWord = currentWord.name.slice(0, 1) + '□□□□';
-    this.setData({ displayWord });
-  },
-
-  updateLetterStates() {
-    const { currentWord, inputValue } = this.data;
-    if (!currentWord) return;
-    const letters = currentWord.name.split('');
-    const states = letters.map((letter, index) => {
-      if (!inputValue) return 'pending';
-      if (index < inputValue.length) return inputValue[index].toLowerCase() === letter.toLowerCase() ? 'correct' : 'wrong';
-      return 'pending';
-    });
-    const visibilityMask = letters.map((_, index) => index < inputValue.length);
-    this.setData({ letterStates: states, visibilityMask });
   },
 
   onInput(e) {
@@ -118,7 +93,39 @@ Page({
     this.updateLetterStates();
     const { currentWord } = this.data;
     if (!currentWord) return;
-    if (inputValue.toLowerCase() === currentWord.name.toLowerCase()) this.onWordCorrect();
+    if (inputValue.toLowerCase() === currentWord.name.toLowerCase()) this.onWordCorrect()
+  },
+
+  // ============== 独立出专门的结算保存模块 ==============
+  async saveStudyRecord(isComplete = false) {
+    const { correctCount, wrongCount, dictId, chapter, dictName, hasSavedRecord } = this.data;
+    const userId = this.getCurrentUserId();
+    const totalTyped = correctCount + wrongCount;
+
+    // 如果没打任何字，或者已经结算过了，就直接跳过不存空数据
+    if (totalTyped === 0 || hasSavedRecord || !userId) return;
+
+    this.data.hasSavedRecord = true; // 锁定，防止重复结算
+    const accuracy = Math.round((correctCount / totalTyped) * 100);
+    const payload = { 
+      userId, 
+      categoryName: dictName || '日常练习', 
+      totalWords: totalTyped, 
+      accuracy 
+    };
+
+    try {
+      await api.addStudyRecord(payload);
+    } catch (err) {
+      console.error('学习记录同步云端失败:', err);
+    } finally {
+      // 本地兜底保证
+      storage.addStudyRecord(payload);
+      if (isComplete) {
+         storage.markChapterCompleted(dictId, chapter, userId);
+      }
+      snapshot.syncSnapshot();
+    }
   },
 
   async onWordCorrect() {
@@ -126,33 +133,24 @@ Page({
     const userId = this.getCurrentUserId();
     const nextCorrectCount = correctCount + 1;
 
-    // 核心结算：利用 try...finally 确保“绝对记录”
+    // 当输入正确的是本章节最后一个单词时，触发【完结撒花】的结算记录
     if (currentWordIndex + 1 >= chapterWords.length) {
-      const accuracy = Math.round(((correctCount + 1) / chapterWords.length) * 100);
-      const payload = { userId, categoryName: this.data.dictName || '日常练习', dictName: this.data.dictName || '日常练习', chapter, totalWords: chapterWords.length, accuracy };
-
+      this.setData({ correctCount: nextCorrectCount });
       wx.showLoading({ title: '结算中...' });
-      try { 
-        await api.addStudyRecord(payload); 
-      } 
-      catch (err) { console.error('结算同步失败:', err); } 
-      finally { 
-        // 关键补丁：无论云端是否响应，必定将进度存入本地 storage
-        storage.addStudyRecord(payload); 
-        storage.updateWordProgress(dictId, chapter, currentWordIndex + 1, userId);
-        storage.markChapterCompleted(dictId, chapter, userId);
-        snapshot.syncSnapshot();
-
-        wx.hideLoading(); 
-        this.setData({ correctCount: nextCorrectCount, currentWord: null, showResult: true, isFavorite: false });
-      }
+      
+      await this.saveStudyRecord(true); // 传入 true 表示整章完成
+      
+      wx.hideLoading(); 
+      this.setData({ currentWord: null, showResult: true, isFavorite: false });
       return;
     }
 
+    // 切换到下一个词并记录进度
     this.setData({ correctCount: nextCorrectCount, currentWordIndex: currentWordIndex + 1, currentWord: chapterWords[currentWordIndex + 1], inputValue: '' });
     this.updateCurrentWordDisplay();
     this.updateLetterStates();
     this.updateFavoriteState();
+    storage.updateWordProgress(dictId, chapter, currentWordIndex + 1, userId); // 实时进度落盘
     storage.updateSettings({ currentDictId: dictId, currentChapter: chapter });
     this.syncSnapshot();
   },
@@ -164,23 +162,36 @@ Page({
 
     const transStr = Array.isArray(currentWord.trans) ? currentWord.trans.join(';') : (currentWord.trans || '暂无释义');
     api.addErrorWord({ userId, dictId, word: currentWord.name, trans: transStr }).catch(err => {
-      console.error('错题上传云端失败:', err);
       storage.addErrorWord(currentWord, dictId, userId);
       snapshot.syncSnapshot();
     });
 
     const nextWrongCount = wrongCount + 1;
-    if (currentWordIndex + 1 >= chapterWords.length) { this.setData({ wrongCount: nextWrongCount, currentWord: null, showResult: true, isFavorite: false }); return; }
+    if (currentWordIndex + 1 >= chapterWords.length) { 
+       this.setData({ wrongCount: nextWrongCount });
+       await this.saveStudyRecord(true); // 跳过最后一个词也算结算
+       this.setData({ currentWord: null, showResult: true, isFavorite: false }); 
+       return; 
+    }
 
     this.setData({ wrongCount: nextWrongCount, currentWordIndex: currentWordIndex + 1, currentWord: chapterWords[currentWordIndex + 1], inputValue: '' });
     this.updateCurrentWordDisplay();
     this.updateLetterStates();
     this.updateFavoriteState();
+    storage.updateWordProgress(dictId, chapter, currentWordIndex + 1, userId);
     storage.updateSettings({ currentDictId: dictId, currentChapter: chapter });
     this.syncSnapshot();
   },
 
   playSound() { const { currentWord, settings } = this.data; if (!currentWord) return; audio.playPronunciation(currentWord.name, settings.pronunciationType).catch(() => {}); },
   nextChapter() { const nextChapter = this.data.chapter + 1; const dictInfo = dictUtil.getDictInfo(this.data.dictId); if (!dictInfo || nextChapter >= dictInfo.totalChapters) { wx.showToast({ title: '已经是最后一章', icon: 'none' }); return; } storage.updateSettings({ currentDictId: this.data.dictId, currentChapter: nextChapter }); this.setData({ chapter: nextChapter }); this.loadChapter(); this.syncSnapshot(); },
-  loadChapterManually() { this.loadChapter(); this.syncSnapshot(); }
+  goBackToGallery() { wx.redirectTo({ url: '/pages/gallery/gallery' }) },
+  switchDict() { this.setData({ showSidebar: true }) },
+  toggleSidebar() { this.setData({ showSidebar: !this.data.showSidebar }) },
+  toggleDictExpand(e) { const dictId = e.currentTarget.dataset.id; const dictList = this.data.dictList.map(item => item.id === dictId ? { ...item, expanded: !item.expanded } : item); this.setData({ dictList }); },
+  onSidebarSelectChapter(e) { const dictId = e.currentTarget.dataset.dictid; const chapter = Number(e.currentTarget.dataset.chapter || 0); storage.updateSettings({ currentDictId: dictId, currentChapter: chapter }); this.setData({ dictId, chapter, showSidebar: false }); this.loadChapter(); this.syncSnapshot(); },
+  switchMaskingMode() { const maskingMode = (this.data.maskingMode + 1) % this.data.maskingModes.length; this.setData({ maskingMode }); storage.updateSettings({ maskingMode }); this.updateCurrentWordDisplay() },
+  switchTranslationMode() { const next = !this.data.settings.isShowTranslation; const settings = { ...this.data.settings, isShowTranslation: next }; this.setData({ settings }); storage.saveSettings(settings) },
+  updateCurrentWordDisplay() { const { currentWord, maskingMode } = this.data; if (!currentWord) return; let displayWord = currentWord.name; if (maskingMode === 1) displayWord = '□□□□□□'; if (maskingMode === 2) displayWord = currentWord.name.slice(0, 1) + '□□□□'; this.setData({ displayWord }) },
+  updateLetterStates() { const { currentWord, inputValue } = this.data; if (!currentWord) return; const letters = currentWord.name.split(''); const states = letters.map((letter, index) => { if (!inputValue) return 'pending'; if (index < inputValue.length) return inputValue[index].toLowerCase() === letter.toLowerCase() ? 'correct' : 'wrong'; return 'pending' }); const visibilityMask = letters.map((_, index) => index < inputValue.length); this.setData({ letterStates: states, visibilityMask }) },
 })
