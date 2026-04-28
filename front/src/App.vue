@@ -217,21 +217,47 @@ export default {
     formFields() { if (this.formType === 'category') return [{ key: 'name', label: '分类名称', placeholder: '例如：CET4' }, { key: 'sort', label: '排序', placeholder: '例如：1' }]; return [{ key: 'word', label: '英文单词', placeholder: '例如：apple' }, { key: 'meaning', label: '中文释义', placeholder: '例如：苹果' }, { key: 'phonetic', label: '音标', placeholder: '例如：[ˈæpl]' }, { key: 'example', label: '例句', placeholder: '例如：an apple a day' }, { key: 'categoryId', label: '分类ID', placeholder: '例如：1' }, { key: 'recommended', label: '推荐(0/1)', placeholder: '例如：1' }] },
     userBlocks() { return [{ key: 'favorites', title: '收藏', rows: this.selectedFavorites.map(item => ({ id: item.id, label: item.word })) }, { key: 'errors', title: '错题', rows: this.selectedErrors.map(item => ({ id: item.id, label: `${item.word}（错${item.wrongCount}次）` })) }, { key: 'study', title: '学习记录', rows: this.selectedStudyRecords.map(item => ({ id: item.id, label: `${item.categoryName} / ${item.accuracy}%` })) }, { key: 'saved', title: '生词本', rows: this.selectedSavedWords.map(item => ({ id: item.id, label: item.word })) }] },
   },
-  methods: {
-    async refreshData() {
+ methods: {
+    // 优化：监听菜单切换，只加载对应数据
+    watch: {
+      activeMenu(newMenu) {
+        this.loadDataForMenu(newMenu);
+      }
+    },
+    
+    // 优化：将全局刷新改为根据当前菜单局部刷新
+    async loadDataForMenu(menu) {
+      this.backendStatus = '加载中...';
       try {
-        const [categories, words, users, studyRecords, favorites, errors, savedWords, snapshots] = await Promise.all([request('/categories'), request('/words'), request('/users'), request('/study-records'), request('/favorites'), request('/errors'), request('/saved-words'), request('/sync/snapshot/latest')])
-        this.categories = categories.data || []
-        this.words = words.data || []
-        this.users = users.data || []
-        this.studyRecords = studyRecords.data || []
-        this.favorites = favorites.data || []
-        this.errors = errors.data || []
-        this.savedWords = savedWords.data || []
-        this.snapshots = snapshots.data || []
-        this.backendStatus = '接口正常'
-        this.backendPreview = JSON.stringify({ categories, words, users, studyRecords, favorites, errors, savedWords, snapshots }, null, 2)
-      } catch (error) { this.backendStatus = '接口异常'; this.backendPreview = String(error) }
+        let res;
+        switch(menu) {
+          case 'dashboard':{
+            // 仪表盘只拉用户、快照等轻量数据做统计
+            const [users, snaps] = await Promise.all([request('/users'), request('/sync/snapshot/latest')]);
+            this.users = users.data || [];
+            this.snapshots = snaps.data || [];
+            break;}
+          case 'category': res = await request('/categories'); this.categories = res.data || []; break;
+          case 'word': res = await request('/words'); this.words = res.data || []; break;
+          case 'user': res = await request('/users'); this.users = res.data || []; break;
+          case 'study': res = await request('/study-records'); this.studyRecords = res.data || []; break;
+          case 'favorite': res = await request('/favorites'); this.favorites = res.data || []; break;
+          case 'error': res = await request('/errors'); this.errors = res.data || []; break;
+          case 'saved': res = await request('/saved-words'); this.savedWords = res.data || []; break;
+          case 'snapshot': res = await request('/sync/snapshot/latest'); this.snapshots = res.data || []; break;
+        }
+        
+        this.backendStatus = '接口正常';
+        this.backendPreview = res ? JSON.stringify(res, null, 2) : '仪表盘数据已就绪';
+      } catch (error) {
+        this.backendStatus = '接口异常';
+        this.backendPreview = String(error);
+      }
+    },
+
+    async refreshData() {
+      // 现在的刷新按钮只需刷新当前面板
+      await this.loadDataForMenu(this.activeMenu);
     },
     formatCell(row, key) { if (key === 'syncedAt') return this.formatTime(row.syncedAt); return row[key] },
     formatTime(value) { if (!value) return '-'; const date = new Date(Number(value)); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}` },

@@ -28,7 +28,8 @@ public class StudyRecordController implements HttpHandler {
             if ("POST".equals(method)) {
                 String body = readBody(exchange.getRequestBody());
                 int userId = QueryParser.getJsonInt(body, "userId", 0);
-                String categoryName = QueryParser.getJsonString(body, "categoryName");
+                // 建议修改 Java 端 StudyRecordController.java 的第 29 行左右：
+                String categoryName = QueryParser.getJsonString(body, "dictName"); // 对齐小程序的 dictName
                 int totalWords = QueryParser.getJsonInt(body, "totalWords", 0);
                 int accuracy = QueryParser.getJsonInt(body, "accuracy", 0);
                 JsonResponses.write(exchange, 200, service.addStudyRecord(userId, categoryName, totalWords, accuracy) ? "{\"success\":true}" : "{\"success\":false}");
