@@ -4,8 +4,16 @@ const api = require('../../utils/api.js');
 const snapshot = require('../../utils/snapshot.js');
 const audio = require('../../utils/audio.js');
 
+function extractList(res) {
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray(res.data)) return res.data;
+  if (res && res.data && Array.isArray(res.data.data)) return res.data.data;
+  return null;
+}
+
 Page({
-  data: { records: [], loginUser: null, isLoading: false, settings: {} },
+  // 修正：从 records 改为 words
+  data: { words: [], loginUser: null, isLoading: false, settings: {} },
   onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData(); },
   onShow() { this.loadData(); },
   
@@ -18,26 +26,35 @@ Page({
     wx.showNavigationBarLoading();
     try {
       const res = await api.getUserSavedWords(userId);
-      if (res && res.data) {
-        const records = res.data.map(item => ({
-          ...item, word: item.word || item.name,
-          trans: typeof item.trans === 'string' ? item.trans.split('\n') : (item.trans || [])
+      const list = extractList(res);
+      if (list) {
+        const words = list.map(item => ({
+          ...item, 
+          word: item.word || item.name,
+          trans: typeof item.trans === 'string' ? item.trans : (Array.isArray(item.trans) ? item.trans.join(', ') : '暂无释义')
         }));
-        this.setData({ records, isLoading: false });
+        this.setData({ words, isLoading: false });
         return;
       }
     } catch (err) { console.error('云端获取生词失败:', err); } 
     finally { wx.hideNavigationBarLoading(); }
 
-    const records = storage.getSavedWordsByUser(userId);
-    this.setData({ records, isLoading: false });
+    const fallbackRecords = storage.getSavedWordsByUser(userId).map(item => ({
+        ...item,
+        word: item.word || item.name,
+        trans: typeof item.trans === 'string' ? item.trans : (Array.isArray(item.trans) ? item.trans.join(', ') : '暂无释义')
+    }));
+    this.setData({ words: fallbackRecords, isLoading: false });
   },
 
-  async removeSaved(e) {
-    const item = e.currentTarget.dataset.item;
+  async deleteWord(e) {
+    const id = e.currentTarget.dataset.id;
+    const item = this.data.words.find(i => i.id === id) || this.data.words.find(i => i.word === id);
+    if(!item) return;
+
     const userId = this.data.loginUser.userId;
     try {
-      if (item.id) await api.deleteSavedWord(item.id);
+      if (item.id && typeof item.id === 'number') await api.deleteSavedWord(item.id);
       storage.removeSavedWord(item.word || item.name, userId);
     } catch(err) {
       storage.removeSavedWord(item.word || item.name, userId);
@@ -47,27 +64,30 @@ Page({
   },
 
   async addToPractice(e) {
-    const item = e.currentTarget.dataset.item;
+    const wordName = e.currentTarget.dataset.word;
+    const transStr = e.currentTarget.dataset.trans || '暂无释义';
     const userId = this.data.loginUser.userId;
-    const wordName = item.word || item.name;
-    const transStr = Array.isArray(item.trans) ? item.trans.join(',') : (item.trans || '暂无释义');
 
     wx.showLoading({ title: '加入练习中...' });
     try {
-      // 对齐 ErrorController，防 500
       await api.addErrorWord({ userId: userId, word: wordName, trans: transStr, dictId: 'saved' });
-      storage.addErrorWord({ name: wordName, trans: item.trans }, 'saved', userId);
+      storage.addErrorWord({ name: wordName, trans: [transStr] }, 'saved', userId);
       wx.hideLoading();
       wx.showToast({ title: '已加入错题本', icon: 'success' });
     } catch(err) {
       console.error('云端加入错题失败:', err);
-      storage.addErrorWord({ name: wordName, trans: item.trans }, 'saved', userId);
+      storage.addErrorWord({ name: wordName, trans: [transStr] }, 'saved', userId);
       snapshot.syncSnapshot();
       wx.hideLoading();
       wx.showToast({ title: '离线加入成功', icon: 'success' });
     }
   },
 
-  playSound(e) { const word = e.currentTarget.dataset.word; audio.playPronunciation(word, this.data.settings.pronunciationType || 'uk').catch(() => {}); },
-  goBack() { wx.navigateBack({ delta: 1 }) }
+  playSound(e) { 
+     const word = e.currentTarget.dataset.word; 
+     audio.playPronunciation(word, this.data.settings.pronunciationType || 'uk').catch(() => {}); 
+  },
+  goBack() { wx.navigateBack({ delta: 1 }) },
+  goHome() { wx.reLaunch({ url: '/pages/gallery/gallery' }) },
+  goLogout() { storage.clearLoginSession(); wx.reLaunch({ url: '/pages/login/login' }) }
 })
