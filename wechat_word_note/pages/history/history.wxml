@@ -1,0 +1,30 @@
+<view class="history-container">
+  <view class="header">
+    <text class="title">学习记录 ({{records.length}})</text>
+    <text class="sub-title">记录你的练习结果和正确率</text>
+  </view>
+
+  <view class="nav-bar">
+    <view class="nav-btn" bindtap="goHome">🏠 首页</view>
+    <view class="nav-btn" bindtap="goBack">↩ 返回</view>
+    <view class="nav-btn" bindtap="goLogout">🚪 退出</view>
+  </view>
+
+  <view class="history-list" wx:if="{{records.length > 0}}">
+    <view class="history-card" wx:for="{{records}}" wx:key="id">
+      <view class="history-top">
+        <text class="dict-name">{{item.dictName || item.dictId}}</text>
+        <text class="accuracy">{{item.accuracy}}%</text>
+      </view>
+      <view class="history-row"><text>章节</text><text>第 {{(item.chapter || 0) + 1}} 章</text></view>
+      <view class="history-row"><text>单词数</text><text>{{item.totalWords}}</text></view>
+      <view class="history-row"><text>时间</text><text>{{item.timeText}}</text></view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">📈</text>
+    <text class="empty-text">暂无学习记录</text>
+    <text class="empty-hint">完成一次练习后会自动记录</text>
+  </view>
+</view>

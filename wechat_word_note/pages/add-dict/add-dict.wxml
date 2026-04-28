@@ -1,0 +1,55 @@
+<!--pages/add-dict/add-dict.wxml-->
+<view class="add-dict-container">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">词典名称</text>
+      <input 
+        class="input"
+        type="text"
+        placeholder="例如：我的生词本"
+        value="{{dictName}}"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label-row">
+        <text class="label">单词列表</text>
+        <view class="label-actions">
+          <text class="action-btn" bindtap="showExample">格式说明</text>
+          <text class="action-btn" bindtap="importExample">导入示例</text>
+        </view>
+      </view>
+      <textarea 
+        class="textarea"
+        placeholder="每行一个单词，下一行填写释义，单词之间空一行"
+        value="{{wordsText}}"
+        bindinput="onWordsInput"
+        auto-height
+        maxlength="-1"
+      />
+    </view>
+
+    <view class="hint">
+      <text class="hint-title">📝 格式说明：</text>
+      <text class="hint-text">第1行：单词</text>
+      <text class="hint-text">第2行：释义</text>
+      <text class="hint-text">第3行：空行（分隔）</text>
+    </view>
+
+    <view class="example">
+      <text class="example-title">示例：</text>
+      <view class="example-code">
+        <text>apple</text>
+        <text>n. 苹果</text>
+        <text></text>
+        <text>banana</text>
+        <text>n. 香蕉</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button class="btn-save" bindtap="saveDict">保存词典</button>
+  </view>
+</view>

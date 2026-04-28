@@ -1,0 +1,31 @@
+<view class="favorites-container">
+  <view class="header">
+    <text class="title">收藏本 ({{favorites.length}})</text>
+    <text class="sub-title">你收藏过的单词会保存在这里</text>
+  </view>
+
+  <view class="nav-bar">
+    <view class="nav-btn" bindtap="goHome">🏠 首页</view>
+    <view class="nav-btn" bindtap="goBack">↩ 返回</view>
+    <view class="nav-btn" bindtap="goLogout">🚪 退出</view>
+  </view>
+
+  <view class="favorite-list" wx:if="{{favorites.length > 0}}">
+    <view class="favorite-card" wx:for="{{favorites}}" wx:key="id">
+      <view class="favorite-header">
+        <view class="word-section">
+          <text class="word">{{item.word}}</text>
+          <view class="sound-btn" bindtap="playSound" data-word="{{item.word}}">🔊</view>
+        </view>
+        <text class="delete-btn" bindtap="removeFavorite" data-id="{{item.id}}">✕</text>
+      </view>
+      <view class="translation">{{item.transText}}</view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">⭐</text>
+    <text class="empty-text">收藏本为空</text>
+    <text class="empty-hint">遇到喜欢的单词可以收藏起来</text>
+  </view>
+</view>

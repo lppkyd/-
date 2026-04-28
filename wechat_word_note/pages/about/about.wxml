@@ -1,0 +1,47 @@
+<!--pages/about/about.wxml-->
+<view class="about-container">
+  <view class="header">
+    <view class="logo">
+      <text class="logo-text">QL</text>
+    </view>
+    <text class="app-name">梓阳单词本</text>
+    <text class="version">Version 1.2.3</text>
+  </view>
+
+  <view class="content">
+    <view class="description">
+      <text>一个为英语学习者制作的便捷单词本。</text>
+      <text>如果你在使用中遇到任何 Bug 或有任何功能建议，欢迎随时联系我。</text>
+    </view>
+
+    <view class="contact-card">
+      <view class="card-title">联系方式</view>
+      
+      <view class="contact-item" bindtap="copyText" data-text="zhangboyliubi" data-type="微信号">
+        <view class="contact-left">
+          <text class="icon">💬</text>
+          <view class="contact-info">
+            <text class="label">开发者微信</text>
+            <text class="value">zhangboyliubi</text>
+          </view>
+        </view>
+        <view class="copy-btn">复制</view>
+      </view>
+
+      <view class="contact-item" bindtap="copyText" data-text="tesssuunmao@SpeechGrammarList.com" data-type="邮箱">
+        <view class="contact-left">
+          <text class="icon">📧</text>
+          <view class="contact-info">
+            <text class="label">反馈邮箱</text>
+            <text class="value email">tesssuunmao@gmail.com</text>
+          </view>
+        </view>
+        <view class="copy-btn">复制</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <text>Designed & Developed by Antigravity</text>
+  </view>
+</view>

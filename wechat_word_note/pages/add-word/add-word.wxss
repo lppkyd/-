@@ -1,0 +1,132 @@
+/* pages/add-word/add-word.wxss */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%);
+  padding-bottom: 160rpx;
+}
+
+.header {
+  padding: 48rpx 32rpx 24rpx;
+}
+
+.title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #64748B;
+}
+
+.form-section {
+  margin: 0 32rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 12rpx 30rpx rgba(15, 23, 42, 0.08);
+}
+
+.input-group {
+  margin-bottom: 28rpx;
+}
+
+.label {
+  display: block;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.input-row {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1rpx solid #CBD5E1;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  font-size: 28rpx;
+  background: #fff;
+}
+
+.input-with-btn {
+  flex: 1;
+}
+
+.lookup-btn {
+  flex-shrink: 0;
+  background: #EEF2FF;
+  color: #4F46E5;
+  border-radius: 16rpx;
+  padding: 0 22rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  font-size: 24rpx;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 220rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #CBD5E1;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  font-size: 28rpx;
+  background: #fff;
+}
+
+.submit-btn {
+  margin-top: 12rpx;
+  background: linear-gradient(135deg, #4F46E5, #2563EB);
+  color: #fff;
+  border-radius: 16rpx;
+  height: 84rpx;
+  line-height: 84rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff;
+  border-top: 1rpx solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.nav-item {
+  flex: 1;
+  text-align: center;
+  color: #64748B;
+}
+
+.nav-item.active {
+  color: #4F46E5;
+}
+
+.nav-icon {
+  display: block;
+  font-size: 40rpx;
+}
+
+.nav-text {
+  display: block;
+  font-size: 22rpx;
+  margin-top: 6rpx;
+}

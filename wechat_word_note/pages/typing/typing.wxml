@@ -1,0 +1,126 @@
+<view class="typing-container">
+  <view class="header">
+    <view class="header__left">
+      <view class="back-btn" bindtap="goBackToGallery">← 词库</view>
+      <view class="dict-info">
+        <text class="dict-name">{{dictName}}</text>
+        <text class="chapter-info">第 {{chapter + 1}} 章 · {{currentWordIndex + 1}} / {{totalWords}}</text>
+      </view>
+      <view class="switch-icon" bindtap="switchDict">☰</view>
+    </view>
+
+    <view class="toggles">
+      <view class="mode-toggle" bindtap="switchMaskingMode"><text class="mode-text">{{maskingModes[maskingMode]}}</text></view>
+      <view class="mode-toggle" bindtap="switchTranslationMode"><text class="mode-text">翻译：{{settings.isShowTranslation ? '显示' : '隐藏'}}</text></view>
+      <view class="mode-toggle" bindtap="toggleFavorite"><text class="mode-text">{{isFavorite ? '已收藏' : '收藏'}}</text></view>
+    </view>
+
+    <view class="progress-info">正确 {{correctCount}} · 错误 {{wrongCount}}</view>
+  </view>
+
+  <view class="state-card" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="state-card" wx:if="{{emptyTip && !loading}}">
+    <text>{{emptyTip}}</text>
+    <view class="state-actions">
+      <button class="state-btn" bindtap="goBackToGallery">返回词库</button>
+    </view>
+  </view>
+
+  <view class="word-section" wx:if="{{currentWord && !loading}}">
+    <view class="word-display">
+      <text class="word-text">{{displayWord}}</text>
+      <view class="sound-btn" bindtap="playSound">🔊</view>
+    </view>
+
+    <view class="phonetic" wx:if="{{currentWord.ukphone || currentWord.usphone}}">
+      <text class="phonetic-text">{{settings.pronunciationType === 'uk' ? currentWord.ukphone : currentWord.usphone}}</text>
+    </view>
+
+    <view class="translation" wx:if="{{settings.isShowTranslation}}">
+      <text class="translation-text" wx:for="{{currentWord.trans}}" wx:key="index">{{item}}</text>
+    </view>
+
+    <view class="example" wx:if="{{currentWord.example}}">
+      <text class="example-text">{{currentWord.example}}</text>
+    </view>
+
+    <view class="letter-states">
+      <view class="letter-box {{item === 'correct' ? 'correct' : item === 'wrong' ? 'wrong' : ''}}" wx:for="{{letterStates}}" wx:key="index">
+        <text class="letter">{{currentWord.name[index]}}</text>
+        <text class="state-icon {{item}}" wx:if="{{item === 'correct'}}">✓</text>
+        <text class="state-icon wrong" wx:if="{{item === 'wrong'}}">✕</text>
+      </view>
+    </view>
+
+    <view class="input-section">
+      <input class="word-input" placeholder="输入单词" bindinput="onInput" value="{{inputValue}}" />
+    </view>
+
+    <view class="stats-section">
+      <view class="stats">
+        <text class="stat-item correct">正确：{{correctCount}}</text>
+        <text class="stat-item wrong">错误：{{wrongCount}}</text>
+      </view>
+      <button class="skip-btn" bindtap="skipWord">跳过</button>
+    </view>
+  </view>
+
+  <view class="result-section" wx:if="{{showResult}}">
+    <view class="result-card">
+      <text class="result-title">本章完成</text>
+      <view class="result-stats">
+        <view class="result-item"><text class="result-label">正确</text><text class="result-value">{{correctCount}}</text></view>
+        <view class="result-item"><text class="result-label">错误</text><text class="result-value">{{wrongCount}}</text></view>
+        <view class="result-item"><text class="result-label">章节</text><text class="result-value">{{chapter + 1}}</text></view>
+      </view>
+      <view class="result-actions">
+        <button class="state-btn" bindtap="loadChapterManually">重新练习</button>
+        <button class="state-btn state-btn--ghost" bindtap="goBackToGallery">返回词库</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="sidebar-mask {{showSidebar ? 'show' : ''}}" bindtap="toggleSidebar"></view>
+  <view class="sidebar {{showSidebar ? 'show' : ''}}">
+    <view class="sidebar-header">
+      <text class="sidebar-title">选择词库</text>
+      <text class="close-btn" bindtap="toggleSidebar">×</text>
+    </view>
+    <scroll-view scroll-y class="sidebar-scroll">
+      <view class="sidebar-dict-group" wx:for="{{dictList}}" wx:key="id">
+        <view class="sidebar-dict-header" bindtap="toggleDictExpand" data-id="{{item.id}}">
+          <text class="sidebar-dict-name">{{item.name}}</text>
+          <text class="arrow {{item.expanded ? 'expanded' : ''}}">›</text>
+        </view>
+        <view wx:if="{{item.expanded}}">
+          <view class="sidebar-chapter-item {{dictId === item.id && chapter === chapterItem ? 'active' : ''}}" wx:for="{{item.chapters}}" wx:key="*this" wx:for-item="chapterItem" bindtap="onSidebarSelectChapter" data-dictid="{{item.id}}" data-chapter="{{chapterItem}}">
+            <text>第 {{chapterItem + 1}} 章</text>
+            <text class="current-tag" wx:if="{{dictId === item.id && chapter === chapterItem}}">当前</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="bottom-nav">
+    <navigator url="/pages/typing/typing" open-type="reLaunch" class="nav-item active">
+      <text class="nav-icon">⌨️</text>
+      <text class="nav-text">打字练习</text>
+    </navigator>
+    <navigator url="/pages/gallery/gallery" open-type="reLaunch" class="nav-item">
+      <text class="nav-icon">📚</text>
+      <text class="nav-text">词库选择</text>
+    </navigator>
+    <navigator url="/pages/add-word/add-word" open-type="reLaunch" class="nav-item">
+      <text class="nav-icon">🔍</text>
+      <text class="nav-text">单词查询</text>
+    </navigator>
+    <navigator url="/pages/user/user" open-type="reLaunch" class="nav-item">
+      <text class="nav-icon">👤</text>
+      <text class="nav-text">个人中心</text>
+    </navigator>
+  </view>
+</view>

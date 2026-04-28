@@ -1,0 +1,14 @@
+{
+  "id": "general2",
+  "name": "通用词典 B",
+  "description": "常见场景英语词汇",
+  "categories": [
+    {
+      "name": "场景常用",
+      "words": [
+        { "name": "school", "trans": ["n. 学校"], "usphone": "[skuːl]", "ukphone": "[skuːl]" },
+        { "name": "computer", "trans": ["n. 计算机"], "usphone": "[kəmˈpjuːtər]", "ukphone": "[kəmˈpjuːtə(r)]" }
+      ]
+    }
+  ]
+}

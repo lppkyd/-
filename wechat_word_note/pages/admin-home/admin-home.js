@@ -1,0 +1,40 @@
+// pages/admin-home/admin-home.js
+const api = require('../../utils/api.js')
+const storage = require('../../utils/storage.js')
+
+Page({
+  data: {
+    adminInfo: {}, users: [], selectedUser: null, favorites: [], errorWords: [], studyRecords: [], savedWords: [],
+    dicts: [], categories: [], words: [], activeTab: 'users',
+    dictForm: { id: 0, name: '', description: '' }, categoryForm: { id: 0, name: '', sort: 0, isSystem: 1 },
+    wordForm: { id: 0, categoryId: '', dictId: '', word: '', meaning: '', phonetic: '', example: '', recommended: 0 },
+    selectedCategoryName: '', selectedDictName: '',
+  },
+  onLoad() { this.init() },
+  async init() { const loginUser = storage.getLoginUser() || {}; if (!loginUser || loginUser.role !== 'admin') return wx.reLaunch({ url: '/pages/login/login' }); this.setData({ adminInfo: loginUser }); await Promise.all([this.loadUsers(), this.loadDicts(), this.loadCategories(), this.loadWords()]) },
+  async loadUsers() { const res = await api.request('/users'); this.setData({ users: res.data || [] }) },
+  async loadDicts() { const res = await api.request('/dicts'); this.setData({ dicts: res.data || [] }) },
+  async loadCategories() { const res = await api.request('/categories'); this.setData({ categories: res.data || [] }) },
+  async loadWords() { const res = await api.request('/words'); this.setData({ words: res.data || [] }) },
+  backToUsers() { this.setData({ activeTab: 'users', selectedUser: null, favorites: [], errorWords: [], studyRecords: [], savedWords: [] }) },
+  goDicts() { this.setData({ activeTab: 'dicts' }) }, goCategories() { this.setData({ activeTab: 'categories' }) }, goWords() { this.setData({ activeTab: 'words' }) },
+  async selectUser(e) { const userId = Number(e.currentTarget.dataset.userid); const user = this.data.users.find(item => Number(item.id) === userId); this.setData({ selectedUser: user, activeTab: 'user-detail' }); const [favoritesRes, errorsRes, recordsRes, savedWordsRes] = await Promise.all([api.request(`/users/${userId}/favorites`), api.request(`/users/${userId}/errors`), api.request(`/users/${userId}/study-records`), api.request(`/users/${userId}/saved-words`)]); this.setData({ favorites: favoritesRes.data || [], errorWords: errorsRes.data || [], studyRecords: recordsRes.data || [], savedWords: savedWordsRes.data || [] }) },
+  onDictInput(e) { this.setData({ [`dictForm.${e.currentTarget.dataset.field}`]: e.detail.value }) }, editDict(e) { const item = this.data.dicts.find(d => Number(d.id) === Number(e.currentTarget.dataset.id)); this.setData({ dictForm: { id: item.id, name: item.name, description: item.description || '' } }) },
+  async saveDict() { const form = this.data.dictForm; if (!form.name) return wx.showToast({ title: '请输入词典名称', icon: 'none' }); await api.request('/dicts', { method: form.id ? 'PUT' : 'POST', body: form }); wx.showToast({ title: '已保存', icon: 'success' }); this.setData({ dictForm: { id: 0, name: '', description: '' } }); await this.loadDicts() },
+  async deleteDict(e) { await api.request('/dicts', { method: 'DELETE', body: { id: Number(e.currentTarget.dataset.id) } }); wx.showToast({ title: '已删除', icon: 'success' }); await this.loadDicts() },
+  onCategoryInput(e) { this.setData({ [`categoryForm.${e.currentTarget.dataset.field}`]: e.detail.value }) }, editCategory(e) { const item = this.data.categories.find(c => Number(c.id) === Number(e.currentTarget.dataset.id)); this.setData({ categoryForm: { id: item.id, name: item.name, sort: item.sort, isSystem: 1 } }) },
+  async saveCategory() { const form = { ...this.data.categoryForm, sort: Number(this.data.categoryForm.sort || 0) }; if (!form.name) return wx.showToast({ title: '请输入分类名称', icon: 'none' }); await api.request('/categories', { method: form.id ? 'PUT' : 'POST', body: form }); wx.showToast({ title: '已保存', icon: 'success' }); this.setData({ categoryForm: { id: 0, name: '', sort: 0, isSystem: 1 } }); await this.loadCategories() },
+  async deleteCategory(e) { await api.request('/categories', { method: 'DELETE', body: { id: Number(e.currentTarget.dataset.id) } }); wx.showToast({ title: '已删除', icon: 'success' }); await this.loadCategories() },
+  onWordInput(e) { this.setData({ [`wordForm.${e.currentTarget.dataset.field}`]: e.detail.value }) },
+  onWordDictChange(e) { const dict = this.data.dicts[Number(e.detail.value)]; this.setData({ 'wordForm.dictId': dict ? dict.id : '', selectedDictName: dict ? dict.name : '' }) },
+  onWordCategoryChange(e) { const category = this.data.categories[Number(e.detail.value)]; this.setData({ 'wordForm.categoryId': category ? category.id : '', selectedCategoryName: category ? category.name : '' }) },
+  editWord(e) { const item = this.data.words.find(w => Number(w.id) === Number(e.currentTarget.dataset.id)); this.setData({ wordForm: { id: item.id, categoryId: item.categoryId || '', dictId: item.dictId || '', word: item.word, meaning: item.meaning, phonetic: item.phonetic || '', example: item.example || '', recommended: item.recommended ? 1 : 0 } }) },
+  async saveWord() { const form = { ...this.data.wordForm, categoryId: Number(this.data.wordForm.categoryId || 0), dictId: Number(this.data.wordForm.dictId || 0), recommended: Number(this.data.wordForm.recommended || 0) }; if (!form.word || !form.meaning) return wx.showToast({ title: '请填写单词和释义', icon: 'none' }); await api.request('/words', { method: form.id ? 'PUT' : 'POST', body: form }); wx.showToast({ title: '已保存', icon: 'success' }); this.setData({ wordForm: { id: 0, categoryId: '', dictId: '', word: '', meaning: '', phonetic: '', example: '', recommended: 0 } }); await this.loadWords() },
+  async deleteWord(e) { await api.request('/words', { method: 'DELETE', body: { id: Number(e.currentTarget.dataset.id) } }); wx.showToast({ title: '已删除', icon: 'success' }); await this.loadWords() },
+  clearUserFavorites() { if (!this.data.selectedUser) return; wx.showModal({ title: '清空收藏', content: '确定要清空该用户收藏吗？', success: async (res) => { if (res.confirm) { await api.request(`/users/${this.data.selectedUser.id}/clear-favorites`, { method: 'POST' }); await this.selectUser({ currentTarget: { dataset: { userid: this.data.selectedUser.id } } }) } } }) },
+  clearUserErrors() { if (!this.data.selectedUser) return; wx.showModal({ title: '清空错题', content: '确定要清空该用户错题吗？', success: async (res) => { if (res.confirm) { await api.request(`/users/${this.data.selectedUser.id}/clear-errors`, { method: 'POST' }); await this.selectUser({ currentTarget: { dataset: { userid: this.data.selectedUser.id } } }) } } }) },
+  clearUserStudyRecords() { if (!this.data.selectedUser) return; wx.showModal({ title: '清空学习记录', content: '确定要清空该用户学习记录吗？', success: async (res) => { if (res.confirm) { await api.request(`/users/${this.data.selectedUser.id}/clear-study-records`, { method: 'POST' }); await this.selectUser({ currentTarget: { dataset: { userid: this.data.selectedUser.id } } }) } } }) },
+  clearUserSavedWords() { if (!this.data.selectedUser) return; wx.showModal({ title: '清空生词本', content: '确定要清空该用户生词本吗？', success: async (res) => { if (res.confirm) { await api.request(`/users/${this.data.selectedUser.id}/clear-saved-words`, { method: 'POST' }); await this.selectUser({ currentTarget: { dataset: { userid: this.data.selectedUser.id } } }) } } }) },
+  deleteSelectedUser() { if (!this.data.selectedUser) return; wx.showModal({ title: '删除用户', content: '确定删除该用户及其数据吗？', confirmColor: '#EF4444', success: async (res) => { if (res.confirm) { await api.request(`/users/${this.data.selectedUser.id}`, { method: 'DELETE' }); this.backToUsers(); await this.loadUsers() } } }) },
+  logout() { storage.clearLoginSession(); wx.reLaunch({ url: '/pages/login/login' }) },
+})

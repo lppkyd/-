@@ -1,0 +1,64 @@
+<view class="admin-page">
+  <view class="top-card">
+    <text class="title">管理员后台</text>
+    <text class="sub-title">{{adminInfo.nickname || '系统管理员'}}</text>
+    <button class="logout-btn" bindtap="logout">退出登录</button>
+  </view>
+  <view class="tabs">
+    <view class="tab {{activeTab === 'users' ? 'active' : ''}}" bindtap="backToUsers">用户</view>
+    <view class="tab {{activeTab === 'dicts' ? 'active' : ''}}" bindtap="goDicts">词典</view>
+    <view class="tab {{activeTab === 'categories' ? 'active' : ''}}" bindtap="goCategories">分类</view>
+    <view class="tab {{activeTab === 'words' ? 'active' : ''}}" bindtap="goWords">单词</view>
+  </view>
+
+  <view class="section" wx:if="{{activeTab === 'users'}}">
+    <view class="section-title">用户列表</view>
+    <view class="user-item" wx:for="{{users}}" wx:key="id" bindtap="selectUser" data-userid="{{item.id}}">
+      <text>{{item.nickname}}</text><text>ID: {{item.id}}</text>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{activeTab === 'user-detail' && selectedUser}}">
+    <view class="section-title">用户详情：{{selectedUser.nickname}}</view>
+    <view class="mini-card">
+      <view class="row"><text>收藏</text><text>{{favorites.length}} 条</text></view>
+      <view class="action-row"><button size="mini" bindtap="clearUserFavorites">清空收藏</button></view>
+      <view wx:for="{{favorites}}" wx:key="id">{{item.word}} - {{item.trans}}</view>
+    </view>
+    <view class="mini-card">
+      <view class="row"><text>错题</text><text>{{errorWords.length}} 条</text></view>
+      <view class="action-row"><button size="mini" bindtap="clearUserErrors">清空错题</button></view>
+      <view wx:for="{{errorWords}}" wx:key="id">{{item.word}} - 错{{item.wrongCount}}次</view>
+    </view>
+    <view class="mini-card">
+      <view class="row"><text>学习记录</text><text>{{studyRecords.length}} 条</text></view>
+      <view class="action-row"><button size="mini" bindtap="clearUserStudyRecords">清空记录</button></view>
+      <view wx:for="{{studyRecords}}" wx:key="id">{{item.categoryName}} 正确率{{item.accuracy}}%</view>
+    </view>
+    <view class="mini-card">
+      <view class="row"><text>生词本</text><text>{{savedWords.length}} 条</text></view>
+      <view class="action-row"><button size="mini" bindtap="clearUserSavedWords">清空生词</button></view>
+      <view wx:for="{{savedWords}}" wx:key="id">{{item.word}} - {{item.trans}}</view>
+    </view>
+    <button class="danger-btn" bindtap="deleteSelectedUser">删除该用户</button>
+    <button class="back-btn" bindtap="backToUsers">返回用户列表</button>
+  </view>
+
+  <view class="section" wx:if="{{activeTab === 'dicts'}}">
+    <view class="section-title">系统词典 / 自建词典管理</view>
+    <view class="form-card"><input placeholder="词典名称" data-field="name" bindinput="onDictInput" value="{{dictForm.name}}" /><input placeholder="词典描述" data-field="description" bindinput="onDictInput" value="{{dictForm.description}}" /><button bindtap="saveDict">{{dictForm.id ? '保存修改' : '新增词典'}}</button></view>
+    <view class="mini-card" wx:for="{{dicts}}" wx:key="id"><view class="row"><text>{{item.name}}</text><text>{{item.isCustom ? '自建' : '系统'}}</text></view><view class="dict-desc">{{item.description}}</view><button data-id="{{item.id}}" bindtap="editDict">编辑</button><button data-id="{{item.id}}" bindtap="deleteDict">删除</button></view>
+  </view>
+
+  <view class="section" wx:if="{{activeTab === 'categories'}}">
+    <view class="section-title">分类管理</view>
+    <view class="form-card"><input placeholder="分类名称" data-field="name" bindinput="onCategoryInput" value="{{categoryForm.name}}" /><input placeholder="排序" data-field="sort" type="number" bindinput="onCategoryInput" value="{{categoryForm.sort}}" /><button bindtap="saveCategory">{{categoryForm.id ? '保存修改' : '新增分类'}}</button></view>
+    <view class="mini-card" wx:for="{{categories}}" wx:key="id"><view class="row"><text>{{item.name}}</text><text>排序 {{item.sort}}</text></view><button data-id="{{item.id}}" bindtap="editCategory">编辑</button><button data-id="{{item.id}}" bindtap="deleteCategory">删除</button></view>
+  </view>
+
+  <view class="section" wx:if="{{activeTab === 'words'}}">
+    <view class="section-title">单词管理 / 自建词典加词</view>
+    <view class="form-card"><picker mode="selector" range="{{categories}}" range-key="name" bindchange="onWordCategoryChange"><view class="picker">分类：{{selectedCategoryName || '不选'}}</view></picker><picker mode="selector" range="{{dicts}}" range-key="name" bindchange="onWordDictChange"><view class="picker">词典：{{selectedDictName || '不选'}}</view></picker><input placeholder="单词" data-field="word" bindinput="onWordInput" value="{{wordForm.word}}" /><input placeholder="释义" data-field="meaning" bindinput="onWordInput" value="{{wordForm.meaning}}" /><input placeholder="音标" data-field="phonetic" bindinput="onWordInput" value="{{wordForm.phonetic}}" /><input placeholder="例句" data-field="example" bindinput="onWordInput" value="{{wordForm.example}}" /><button bindtap="saveWord">{{wordForm.id ? '保存修改' : '新增单词'}}</button></view>
+    <view class="mini-card" wx:for="{{words}}" wx:key="id"><view class="row"><text>{{item.word}}</text><text>{{item.meaning}}</text></view><view class="dict-desc">分类: {{item.categoryId}} 词典: {{item.dictId}}</view><button data-id="{{item.id}}" bindtap="editWord">编辑</button><button data-id="{{item.id}}" bindtap="deleteWord">删除</button></view>
+  </view>
+</view>

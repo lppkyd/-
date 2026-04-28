@@ -1,0 +1,16 @@
+{
+  "id": "general1",
+  "name": "通用词典 A",
+  "description": "日常高频核心词汇",
+  "categories": [
+    {
+      "name": "高频核心",
+      "words": [
+        { "name": "hello", "trans": ["int. 你好"], "usphone": "[həˈloʊ]", "ukphone": "[həˈləʊ]" },
+        { "name": "world", "trans": ["n. 世界"], "usphone": "[wɜːrld]", "ukphone": "[wɜːld]" },
+        { "name": "important", "trans": ["adj. 重要的"], "usphone": "[ɪmˈpɔːrtnt]", "ukphone": "[ɪmˈpɔːtnt]" },
+        { "name": "continue", "trans": ["v. 继续"], "usphone": "[kənˈtɪnjuː]", "ukphone": "[kənˈtɪnjuː]" }
+      ]
+    }
+  ]
+}

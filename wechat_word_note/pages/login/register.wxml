@@ -1,0 +1,11 @@
+<view class="login-page">
+  <view class="login-card">
+    <text class="title">用户注册</text>
+    <text class="sub-title">创建你的学习账号</text>
+    <input class="input" placeholder="昵称" bindinput="onNicknameInput" />
+    <input class="input" placeholder="OpenID / 账号" bindinput="onUsernameInput" />
+    <input class="input" password placeholder="密码" bindinput="onPasswordInput" />
+    <button class="btn" bindtap="register" loading="{{loading}}">注册并登录</button>
+    <button class="btn btn--ghost" bindtap="goBack">返回登录</button>
+  </view>
+</view>

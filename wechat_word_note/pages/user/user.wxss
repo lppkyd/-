@@ -1,0 +1,25 @@
+.user-container { min-height: 100vh; background: #F3F4F6; padding: 32rpx; padding-bottom: 180rpx; }
+.user-header { display: flex; align-items: center; gap: 24rpx; background: linear-gradient(135deg, #4F46E5, #1D4ED8); color: #fff; padding: 32rpx; border-radius: 24rpx; box-shadow: 0 8rpx 30rpx rgba(79,70,229,.25); }
+.avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 52rpx; }
+.username { display: block; font-size: 36rpx; font-weight: 700; }
+.user-desc { display: block; margin-top: 8rpx; font-size: 24rpx; opacity: .9; }
+.stats-grid { margin: 24rpx 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18rpx; }
+.stat-card { background: #fff; border-radius: 20rpx; padding: 24rpx 12rpx; text-align: center; box-shadow: 0 2rpx 12rpx rgba(0,0,0,.05); }
+.stat-value { display: block; font-size: 40rpx; font-weight: 800; color: #4F46E5; }
+.stat-label { display: block; margin-top: 8rpx; font-size: 24rpx; color: #6B7280; }
+.menu-list { display: flex; flex-direction: column; gap: 18rpx; }
+.menu-item { background: #fff; border-radius: 18rpx; padding: 26rpx 24rpx; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2rpx 12rpx rgba(0,0,0,.05); }
+.menu-left, .menu-right { display: flex; align-items: center; gap: 16rpx; }
+.menu-icon { font-size: 34rpx; }
+.menu-text { font-size: 28rpx; color: #111827; }
+.menu-badge { font-size: 22rpx; color: #4F46E5; background: #EEF2FF; padding: 8rpx 16rpx; border-radius: 999rpx; }
+.arrow { font-size: 30rpx; color: #9CA3AF; }
+.preview-card { margin-top: 24rpx; background: #fff; border-radius: 20rpx; padding: 24rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,.05); }
+.preview-title { font-size: 30rpx; font-weight: 700; color: #111827; margin-bottom: 16rpx; }
+.preview-row { display: flex; justify-content: space-between; padding: 14rpx 0; border-bottom: 1rpx solid #F3F4F6; font-size: 24rpx; color: #4B5563; }
+.preview-row:last-child { border-bottom: 0; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 120rpx; background: white; border-top: 1rpx solid #E5E7EB; display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: #6B7280; }
+.nav-item.active { color: #4F46E5; }
+.nav-icon { font-size: 44rpx; margin-bottom: 4rpx; }
+.nav-text { font-size: 22rpx; }

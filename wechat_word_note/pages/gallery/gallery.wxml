@@ -1,0 +1,28 @@
+<view class="page">
+  <view class="header">
+    <view class="header__title">词库中心</view>
+    <view class="header__sub">选择分类后进入单词学习</view>
+  </view>
+
+  <view class="section">
+    <view class="section__title">基础词典</view>
+    <view class="card-list">
+      <view class="dict-card" wx:for="{{presetDicts}}" wx:key="id" data-dictid="{{item.id}}" bindtap="selectPresetDict">
+        <view class="dict-card__name">{{item.name}}</view>
+        <view class="dict-card__desc">{{item.description}}</view>
+        <view class="dict-card__meta">章节：{{item.totalChapters}} · 单词：{{item.totalWords}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section__title">自定义词典</view>
+    <view class="card-list">
+      <view class="dict-card dict-card--custom" wx:for="{{customDicts}}" wx:key="id" data-dictid="{{item.id}}" bindtap="selectCustomDict">
+        <view class="dict-card__name">{{item.name}}</view>
+        <view class="dict-card__desc">自定义添加的词本</view>
+        <view class="dict-card__meta">章节：{{item.totalChapters}} · 单词：{{item.words.length}}</view>
+      </view>
+    </view>
+  </view>
+</view>

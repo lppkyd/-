@@ -1,0 +1,21 @@
+{
+  "id": "cet4",
+  "name": "四级词汇",
+  "description": "大学英语四级核心词汇",
+  "categories": [
+    {
+      "name": "CET4 基础",
+      "words": [
+        { "name": "apple", "trans": ["n. 苹果"], "usphone": "[ˈæpl]", "ukphone": "[ˈæpl]" },
+        { "name": "study", "trans": ["v. 学习；研究"], "usphone": "[ˈstʌdi]", "ukphone": "[ˈstʌdi]" }
+      ]
+    },
+    {
+      "name": "CET4 进阶",
+      "words": [
+        { "name": "achieve", "trans": ["v. 实现；达到"], "usphone": "[əˈtʃiːv]", "ukphone": "[əˈtʃiːv]" },
+        { "name": "improve", "trans": ["v. 提高；改善"], "usphone": "[ɪmˈpruːv]", "ukphone": "[ɪmˈpruːv]" }
+      ]
+    }
+  ]
+}

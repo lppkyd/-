@@ -1,0 +1,184 @@
+/* pages/errors/errors.wxss */
+.errors-container {
+  min-height: 100vh;
+  background: #F3F4F6;
+  padding: 32rpx;
+  padding-bottom: 120rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
+.title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1F2937;
+  display: block;
+}
+
+.sub-title {
+  font-size: 24rpx;
+  color: #6B7280;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.clear-btn {
+  font-size: 28rpx;
+  color: #EF4444;
+  padding: 12rpx 24rpx;
+  background: #FEF2F2;
+  border-radius: 8rpx;
+}
+
+.toolbar {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.toolbar-btn {
+  padding: 14rpx 20rpx;
+  border-radius: 16rpx;
+  background: #fff;
+  color: #334155;
+  font-size: 24rpx;
+  border: 1rpx solid #E2E8F0;
+}
+
+.toolbar-btn.active {
+  background: #EEF2FF;
+  color: #4F46E5;
+  border-color: #C7D2FE;
+}
+
+.error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.error-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.word-section {
+  display: flex;
+  align-items: center;
+}
+
+.word {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-right: 16rpx;
+}
+
+.sound-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #EEF2FF;
+  border-radius: 50%;
+  font-size: 28rpx;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.wrong-count {
+  font-size: 24rpx;
+  color: #EF4444;
+  background: #FEF2F2;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.delete-btn {
+  font-size: 32rpx;
+  color: #9CA3AF;
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phonetic {
+  margin-bottom: 12rpx;
+}
+
+.phonetic-text {
+  font-size: 26rpx;
+  color: #6B7280;
+  font-style: italic;
+}
+
+.translation {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.trans-text {
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.card-actions {
+  margin-top: 22rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.practice-btn {
+  background: #4F46E5;
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 14rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 32rpx;
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #6B7280;
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #9CA3AF;
+}

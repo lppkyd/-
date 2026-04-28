@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/login/register",
+    "pages/admin-home/admin-home",
+    "pages/gallery/gallery",
+    "pages/typing/typing",
+    "pages/errors/errors",
+    "pages/favorites/favorites",
+    "pages/saved-words/saved-words",
+    "pages/history/history",
+    "pages/add-word/add-word",
+    "pages/word-list/word-list",
+    "pages/user/user",
+    "pages/about/about"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#4F46E5",
+    "navigationBarTitleText": "单词学习系统",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F3F4F6",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

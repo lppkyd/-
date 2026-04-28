@@ -1,0 +1,21 @@
+{
+  "id": "cet6",
+  "name": "六级词汇",
+  "description": "大学英语六级核心词汇",
+  "categories": [
+    {
+      "name": "CET6 基础",
+      "words": [
+        { "name": "advanced", "trans": ["adj. 高级的"], "usphone": "[ədˈvænst]", "ukphone": "[ədˈvɑːnst]" },
+        { "name": "challenge", "trans": ["n. 挑战；v. 挑战"], "usphone": "[ˈtʃælɪndʒ]", "ukphone": "[ˈtʃælɪndʒ]" }
+      ]
+    },
+    {
+      "name": "CET6 进阶",
+      "words": [
+        { "name": "crucial", "trans": ["adj. 关键的；决定性的"], "usphone": "[ˈkruːʃl]", "ukphone": "[ˈkruːʃl]" },
+        { "name": "phenomenon", "trans": ["n. 现象"], "usphone": "[fɪˈnɑːmɪnən]", "ukphone": "[fəˈnɒmɪnən]" }
+      ]
+    }
+  ]
+}

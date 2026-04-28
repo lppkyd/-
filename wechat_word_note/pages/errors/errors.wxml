@@ -1,0 +1,53 @@
+<view class="errors-container">
+  <view class="header">
+    <view>
+      <text class="title">错题本 ({{errorWords.length}})</text>
+      <text class="sub-title">记录练习中答错的单词</text>
+    </view>
+    <text class="clear-btn" bindtap="clearAll" wx:if="{{errorWords.length > 0}}">清空</text>
+  </view>
+
+  <view class="nav-bar">
+    <view class="nav-btn" bindtap="goHome">🏠 首页</view>
+    <view class="nav-btn" bindtap="goBack">↩ 返回</view>
+    <view class="nav-btn" bindtap="goLogout">🚪 退出</view>
+  </view>
+
+  <view class="toolbar" wx:if="{{errorWords.length > 0}}">
+    <view class="toolbar-btn {{sortType === 'wrongCount' ? 'active' : ''}}" bindtap="sortByWrongCount">按错误次数</view>
+    <view class="toolbar-btn {{sortType === 'time' ? 'active' : ''}}" bindtap="sortByTime">按最近出错</view>
+  </view>
+
+  <view class="error-list" wx:if="{{errorWords.length > 0}}">
+    <view class="error-card" wx:for="{{errorWords}}" wx:key="word">
+      <view class="error-header">
+        <view class="word-section">
+          <text class="word">{{item.word}}</text>
+          <view class="sound-btn" bindtap="playSound" data-word="{{item.word}}"><text>🔊</text></view>
+        </view>
+        <view class="actions">
+          <text class="wrong-count">错{{item.wrongCount}}次</text>
+          <text class="delete-btn" bindtap="deleteWord" data-word="{{item.word}}" data-dictid="{{item.dictId}}">✕</text>
+        </view>
+      </view>
+
+      <view class="phonetic" wx:if="{{settings.isShowPhonetic}}">
+        <text class="phonetic-text">{{settings.pronunciationType === 'uk' ? item.ukphone : item.usphone}}</text>
+      </view>
+
+      <view class="translation">
+        <text class="trans-text" wx:for="{{item.trans}}" wx:key="index" wx:for-item="trans">{{trans}}</text>
+      </view>
+
+      <view class="card-actions">
+        <button class="practice-btn" bindtap="practiceWord" data-word="{{item.word}}" data-trans="{{item.trans[0]}}" data-usphone="{{item.usphone}}" data-ukphone="{{item.ukphone}}">继续练习</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">📚</text>
+    <text class="empty-text">错题本为空</text>
+    <text class="empty-hint">继续加油练习吧！</text>
+  </view>
+</view>

@@ -1,0 +1,33 @@
+<view class="saved-container">
+  <view class="header">
+    <text class="title">我的生词本 ({{words.length}})</text>
+    <text class="sub-title">记录你保存的生词</text>
+  </view>
+
+  <view class="nav-bar">
+    <view class="nav-btn" bindtap="goHome">🏠 首页</view>
+    <view class="nav-btn" bindtap="goBack">↩ 返回</view>
+    <view class="nav-btn" bindtap="goLogout">🚪 退出</view>
+  </view>
+
+  <view class="word-list" wx:if="{{words.length > 0}}">
+    <view class="word-card" wx:for="{{words}}" wx:key="id">
+      <view class="row">
+        <text class="word">{{item.word}}</text>
+        <text class="phonetic">{{item.ukphone || item.usphone}}</text>
+      </view>
+      <view class="meaning">{{item.trans}}</view>
+      <view class="actions">
+        <button size="mini" bindtap="playSound" data-word="{{item.word}}">发音</button>
+        <button size="mini" bindtap="addToPractice" data-word="{{item.word}}" data-trans="{{item.trans}}">加入练习</button>
+        <button size="mini" bindtap="deleteWord" data-id="{{item.id}}">删除</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">📘</text>
+    <text class="empty-text">生词本为空</text>
+    <text class="empty-hint">查词后可保存到这里</text>
+  </view>
+</view>

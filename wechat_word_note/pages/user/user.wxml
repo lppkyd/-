@@ -1,0 +1,113 @@
+<view class="user-container">
+  <view class="user-header">
+    <view class="avatar">👤</view>
+    <view class="user-info">
+      <text class="username">{{loginUser.nickname || 'Guest User'}}</text>
+      <text class="user-desc">Keep typing, keep learning.</text>
+    </view>
+  </view>
+
+  <view class="stats-grid">
+    <view class="stat-card" bindtap="navToErrors">
+      <text class="stat-value">{{stats.errorCount}}</text>
+      <text class="stat-label">错题本</text>
+    </view>
+    <view class="stat-card" bindtap="navToFavorites">
+      <text class="stat-value">{{stats.favoriteCount}}</text>
+      <text class="stat-label">收藏</text>
+    </view>
+    <view class="stat-card" bindtap="navToSavedWords">
+      <text class="stat-value">{{stats.savedCount}}</text>
+      <text class="stat-label">生词</text>
+    </view>
+    <view class="stat-card" bindtap="navToHistory">
+      <text class="stat-value">{{stats.recordCount}}</text>
+      <text class="stat-label">记录</text>
+    </view>
+  </view>
+
+  <view class="menu-list">
+    <view class="menu-item" bindtap="navToHome">
+      <view class="menu-left">
+        <text class="menu-icon">🏠</text>
+        <text class="menu-text">返回首页</text>
+      </view>
+      <view class="menu-right"><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="navToErrors">
+      <view class="menu-left">
+        <text class="menu-icon">📝</text>
+        <text class="menu-text">我的错题本</text>
+      </view>
+      <view class="menu-right"><text class="menu-badge">{{stats.errorCount}}</text><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="navToFavorites">
+      <view class="menu-left">
+        <text class="menu-icon">⭐</text>
+        <text class="menu-text">我的收藏</text>
+      </view>
+      <view class="menu-right"><text class="menu-badge">{{stats.favoriteCount}}</text><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="navToSavedWords">
+      <view class="menu-left">
+        <text class="menu-icon">📘</text>
+        <text class="menu-text">我的生词本</text>
+      </view>
+      <view class="menu-right"><text class="menu-badge">{{stats.savedCount}}</text><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="navToHistory">
+      <view class="menu-left">
+        <text class="menu-icon">📈</text>
+        <text class="menu-text">学习记录</text>
+      </view>
+      <view class="menu-right"><text class="menu-badge">{{stats.recordCount}}</text><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="navToCustomDicts">
+      <view class="menu-left">
+        <text class="menu-icon">📖</text>
+        <text class="menu-text">创建词典</text>
+      </view>
+      <view class="menu-right"><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="logout">
+      <view class="menu-left">
+        <text class="menu-icon">🚪</text>
+        <text class="menu-text">退出登录</text>
+      </view>
+      <view class="menu-right"><text class="arrow">></text></view>
+    </view>
+
+    <view class="menu-item" bindtap="showAbout">
+      <view class="menu-left">
+        <text class="menu-icon">ℹ️</text>
+        <text class="menu-text">关于</text>
+      </view>
+      <view class="menu-right"><text class="arrow">></text></view>
+    </view>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="navToHome">
+      <text class="nav-icon">📚</text>
+      <text class="nav-text">词库</text>
+    </view>
+    <view class="nav-item" bindtap="navToFavorites">
+      <text class="nav-icon">⭐</text>
+      <text class="nav-text">收藏</text>
+    </view>
+    <view class="nav-item" bindtap="navToSavedWords">
+      <text class="nav-icon">📘</text>
+      <text class="nav-text">生词</text>
+    </view>
+    <view class="nav-item active" bindtap="navToHome">
+      <text class="nav-icon">👤</text>
+      <text class="nav-text">我的</text>
+    </view>
+  </view>
+</view>

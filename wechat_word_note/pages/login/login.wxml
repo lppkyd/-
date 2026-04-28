@@ -1,0 +1,11 @@
+<view class="login-page">
+  <view class="login-card">
+    <text class="title">单词学习系统</text>
+    <text class="sub-title">请先登录后开始学习</text>
+
+    <input class="input" placeholder="账号 / OpenID / 昵称" bindinput="onUsernameInput" />
+    <input class="input" password placeholder="密码" bindinput="onPasswordInput" />
+    <button class="btn" bindtap="login" loading="{{loading}}">登录</button>
+    <button class="btn btn--ghost" bindtap="goRegister">注册新用户</button>
+  </view>
+</view>

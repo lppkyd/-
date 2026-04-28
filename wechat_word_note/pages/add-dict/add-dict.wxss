@@ -1,0 +1,146 @@
+/* pages/add-dict/add-dict.wxss */
+.add-dict-container {
+  min-height: 100vh;
+  background: #F3F4F6;
+  padding: 32rpx;
+  padding-bottom: 160rpx;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.form-item {
+  background: white;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 16rpx;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.label-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.action-btn {
+  font-size: 24rpx;
+  color: #4F46E5;
+  padding: 8rpx 16rpx;
+  background: #EEF2FF;
+  border-radius: 8rpx;
+}
+
+.input {
+  width: 100%;
+  height: 80rpx;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  background: #F9FAFB;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 400rpx;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  background: #F9FAFB;
+  line-height: 1.6;
+}
+
+.hint {
+  background: #EFF6FF;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  border-left: 4rpx solid #3B82F6;
+}
+
+.hint-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1E40AF;
+  margin-bottom: 12rpx;
+}
+
+.hint-text {
+  display: block;
+  font-size: 24rpx;
+  color: #1E40AF;
+  line-height: 1.8;
+  margin-left: 24rpx;
+}
+
+.example {
+  background: white;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  border: 2rpx dashed #D1D5DB;
+}
+
+.example-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #6B7280;
+  margin-bottom: 12rpx;
+}
+
+.example-code {
+  background: #F9FAFB;
+  padding: 16rpx;
+  border-radius: 8rpx;
+  font-family: monospace;
+}
+
+.example-code text {
+  display: block;
+  font-size: 24rpx;
+  color: #374151;
+  line-height: 1.8;
+}
+
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  background: white;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.btn-save {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

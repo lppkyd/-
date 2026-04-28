@@ -1,0 +1,42 @@
+<view class="container">
+  <view class="header">
+    <text class="title">快速添加生词</text>
+    <text class="subtitle">添加到你的个人生词本</text>
+  </view>
+
+  <view class="form-section">
+    <view class="input-group">
+      <text class="label">单词</text>
+      <view class="input-row">
+        <input class="input input-with-btn" placeholder="例如: serendipity" value="{{word}}" bindinput="onWordInput" auto-focus />
+        <button class="lookup-btn" bindtap="lookupWord" disabled="{{isLooking}}">{{isLooking ? '查询中' : '🔍 查词'}}</button>
+      </view>
+    </view>
+
+    <view class="input-group">
+      <text class="label">释义 {{autoFilled ? '(已自动填充)' : ''}}</text>
+      <textarea class="textarea" placeholder="例如: n. 意外发现珍宝的运气" value="{{trans}}" bindinput="onTransInput" />
+    </view>
+
+    <button class="submit-btn" bindtap="saveWord">保存到生词本</button>
+  </view>
+
+  <view class="bottom-nav">
+    <navigator url="/pages/typing/typing" open-type="reLaunch" class="nav-item">
+      <text class="nav-icon">⌨️</text>
+      <text class="nav-text">打字练习</text>
+    </navigator>
+    <navigator url="/pages/gallery/gallery" open-type="reLaunch" class="nav-item">
+      <text class="nav-icon">📚</text>
+      <text class="nav-text">词库选择</text>
+    </navigator>
+    <navigator url="/pages/add-word/add-word" open-type="reLaunch" class="nav-item active">
+      <text class="nav-icon">🔍</text>
+      <text class="nav-text">单词查询</text>
+    </navigator>
+    <navigator url="/pages/user/user" open-type="reLaunch" class="nav-item">
+      <text class="nav-icon">👤</text>
+      <text class="nav-text">个人中心</text>
+    </navigator>
+  </view>
+</view>
