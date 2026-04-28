@@ -1,5 +1,6 @@
 const BASE_URL = 'http://127.0.0.1:8080/api'
 
+function getUserStudyRecords(userId) { return request(`/users/${userId}/study-records`) }
 function request(path, options = {}) {
   return new Promise((resolve, reject) => {
     wx.request({
@@ -48,6 +49,7 @@ function addStudyRecord(payload) { return request('/study-records', { method: 'P
 
 module.exports = {
   request,
+  getUserStudyRecords,
   getCategories,
   getWords,
   login,
