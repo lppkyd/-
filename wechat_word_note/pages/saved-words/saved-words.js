@@ -12,7 +12,6 @@ function extractList(res) {
 }
 
 Page({
-  // 修正：从 records 改为 words
   data: { words: [], loginUser: null, isLoading: false, settings: {} },
   onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData(); },
   onShow() { this.loadData(); },
@@ -28,11 +27,14 @@ Page({
       const res = await api.getUserSavedWords(userId);
       const list = extractList(res);
       if (list) {
-        const words = list.map(item => ({
-          ...item, 
-          word: item.word || item.name,
-          trans: typeof item.trans === 'string' ? item.trans : (Array.isArray(item.trans) ? item.trans.join(', ') : '暂无释义')
-        }));
+        const words = list.map(rawItem => {
+          const item = typeof rawItem === 'string' ? JSON.parse(rawItem) : rawItem;
+          return {
+            ...item, 
+            word: item.word || item.name,
+            trans: typeof item.trans === 'string' ? item.trans : (Array.isArray(item.trans) ? item.trans.join(', ') : '暂无释义')
+          };
+        });
         this.setData({ words, isLoading: false });
         return;
       }
@@ -49,15 +51,16 @@ Page({
 
   async deleteWord(e) {
     const id = e.currentTarget.dataset.id;
-    const item = this.data.words.find(i => i.id === id) || this.data.words.find(i => i.word === id);
+    const item = this.data.words.find(i => i.id == id || i.word == id);
     if(!item) return;
 
     const userId = this.data.loginUser.userId;
     try {
-      if (item.id && typeof item.id === 'number') await api.deleteSavedWord(item.id);
-      storage.removeSavedWord(item.word || item.name, userId);
+      if (item.id) await api.deleteSavedWord(item.id);
+      // 修复：改名为 deleteSavedWord
+      storage.deleteSavedWord(item.word || item.name, userId);
     } catch(err) {
-      storage.removeSavedWord(item.word || item.name, userId);
+      storage.deleteSavedWord(item.word || item.name, userId);
       snapshot.syncSnapshot();
     }
     this.loadData();

@@ -12,7 +12,6 @@ function extractList(res) {
 }
 
 Page({
-  // 修正：改为 errorWords 匹配 wx:for="{{errorWords}}"
   data: { errorWords: [], loginUser: null, isLoading: false, sortType: 'wrongCount', settings: {} },
   onLoad() { this.setData({ settings: storage.getSettings() }); this.loadData() },
   onShow() { this.loadData() },
@@ -28,19 +27,21 @@ Page({
       const res = await api.getUserErrors(userId);
       const list = extractList(res);
       if (list) {
-        const errorWords = list.map(item => ({
-           ...item,
-           // 修正：WXML 是 wx:for="{{item.trans}}" 循环，必须转成数组
-           trans: typeof item.trans === 'string' ? item.trans.split(/[;\n,]/).filter(Boolean) : (item.trans || [])
-        }));
+        const errorWords = list.map(rawItem => {
+           const item = typeof rawItem === 'string' ? JSON.parse(rawItem) : rawItem;
+           return {
+             ...item,
+             trans: typeof item.trans === 'string' ? item.trans.split(/[;\n,]/).filter(Boolean) : (item.trans || [])
+           };
+        });
         this.setData({ errorWords, isLoading: false });
-        this.sortData(); // 加载后应用排序
+        this.sortData(); 
         return;
       }
     } catch (err) { console.error('获取错题失败:', err); } 
     finally { wx.hideNavigationBarLoading(); }
     
-    const fallbackRecords = storage.getErrorsByUser(userId);
+    const fallbackRecords = storage.getErrorWordsByUser(userId);
     this.setData({ errorWords: fallbackRecords, isLoading: false });
     this.sortData();
   },
@@ -51,11 +52,14 @@ Page({
     if(!loginUser) return;
     
     const item = this.data.errorWords.find(i => i.word === word);
+    const dictId = item ? item.dictId : 'custom';
+
     try {
       if (item && item.id) await api.deleteErrorWord(item.id);
-      storage.removeErrorWord(word, loginUser.userId);
+      // 修复：改为 storage.deleteErrorWord，且补齐三个参数
+      storage.deleteErrorWord(word, dictId, loginUser.userId);
     } catch(err) {
-      storage.removeErrorWord(word, loginUser.userId);
+      storage.deleteErrorWord(word, dictId, loginUser.userId);
       snapshot.syncSnapshot();
     }
     this.loadData();
@@ -68,8 +72,8 @@ Page({
       title: '清空错题本', content: '确定要清空所有错题记录吗？',
       success: async (res) => {
         if (res.confirm) {
-           storage.clearErrors(self.data.loginUser.userId);
-           // 云端直接拉新即可，如果后端有清空接口可在这里调用
+           // 修复：原误写为 clearErrors，应为 clearErrorWords
+           storage.clearErrorWords();
            self.loadData();
         }
       }
@@ -83,7 +87,17 @@ Page({
 
   practiceWord(e) {
     const word = e.currentTarget.dataset.word;
-    wx.showToast({ title: '已将 ' + word + ' 调取，敬请期待错题专练功能', icon: 'none' });
+    const dictId = e.currentTarget.dataset.dictid || 'cet4';
+    
+    wx.showModal({
+      title: '继续练习',
+      content: `是否前往打字练习页面，重新练习包含【${word}】的词库？`,
+      success: (res) => {
+        if (res.confirm) {
+          wx.reLaunch({ url: `/pages/typing/typing?dictId=${dictId}` });
+        }
+      }
+    });
   },
 
   sortByWrongCount() { this.setData({ sortType: 'wrongCount' }); this.sortData(); },

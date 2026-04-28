@@ -66,7 +66,6 @@ Page({
     const { currentWord, isFavorite } = this.data;
     if (!currentWord) return;
     const userId = this.getCurrentUserId();
-    // 完美对齐后端 Controller 要求的字段
     const payload = { userId, wordId: 0, word: currentWord.name, trans: Array.isArray(currentWord.trans) ? currentWord.trans.join(';') : (currentWord.trans || '暂无释义') };
 
     this.setData({ isFavorite: !isFavorite });
@@ -127,19 +126,26 @@ Page({
     const userId = this.getCurrentUserId();
     const nextCorrectCount = correctCount + 1;
 
+    // 核心结算：利用 try...finally 确保“绝对记录”
     if (currentWordIndex + 1 >= chapterWords.length) {
       const accuracy = Math.round(((correctCount + 1) / chapterWords.length) * 100);
-      // 完美对齐 StudyRecordController 要求
-      const payload = { userId, categoryName: this.data.dictName || '日常练习', totalWords: chapterWords.length, accuracy };
+      const payload = { userId, categoryName: this.data.dictName || '日常练习', dictName: this.data.dictName || '日常练习', chapter, totalWords: chapterWords.length, accuracy };
 
       wx.showLoading({ title: '结算中...' });
-      try { await api.addStudyRecord(payload); } 
-      catch (err) { console.error('结算同步失败:', err); storage.addStudyRecord(payload); snapshot.syncSnapshot(); } 
-      finally { wx.hideLoading(); }
+      try { 
+        await api.addStudyRecord(payload); 
+      } 
+      catch (err) { console.error('结算同步失败:', err); } 
+      finally { 
+        // 关键补丁：无论云端是否响应，必定将进度存入本地 storage
+        storage.addStudyRecord(payload); 
+        storage.updateWordProgress(dictId, chapter, currentWordIndex + 1, userId);
+        storage.markChapterCompleted(dictId, chapter, userId);
+        snapshot.syncSnapshot();
 
-      storage.updateWordProgress(dictId, chapter, currentWordIndex + 1, userId);
-      storage.markChapterCompleted(dictId, chapter, userId);
-      this.setData({ correctCount: nextCorrectCount, currentWord: null, showResult: true, isFavorite: false });
+        wx.hideLoading(); 
+        this.setData({ correctCount: nextCorrectCount, currentWord: null, showResult: true, isFavorite: false });
+      }
       return;
     }
 
@@ -156,7 +162,6 @@ Page({
     if (!currentWord) return;
     const userId = this.getCurrentUserId();
 
-    // 完美对齐 ErrorController 要求
     const transStr = Array.isArray(currentWord.trans) ? currentWord.trans.join(';') : (currentWord.trans || '暂无释义');
     api.addErrorWord({ userId, dictId, word: currentWord.name, trans: transStr }).catch(err => {
       console.error('错题上传云端失败:', err);

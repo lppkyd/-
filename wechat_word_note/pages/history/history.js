@@ -12,7 +12,6 @@ function extractList(res) {
 // 终极杀手锏：解决 iOS 和微信引擎下解析 "YYYY-MM-DD" 报错导致不显示的问题
 function safeFormatTime(timeStr) {
   if (!timeStr) return '';
-  // 将带有中划线的日期强制转成斜杠，iOS 才认识：2026-04-28 -> 2026/04/28
   const safeStr = String(timeStr).replace(/-/g, '/'); 
   const date = new Date(safeStr);
   if (isNaN(date.getTime())) return timeStr; 
@@ -35,11 +34,15 @@ Page({
       const res = await api.getUserStudyRecords(userId);
       const list = extractList(res);
       if (list) {
-        const records = list.map(item => ({
-          ...item,
-          dictName: item.categoryName || item.dictName || '练习记录',
-          timeText: safeFormatTime(item.createdAt || item.created_at)
-        }));
+        const records = list.map(rawItem => {
+          // 核心修复：防止 Java 后端返回的 List<String> 导致字段 undefined
+          const item = typeof rawItem === 'string' ? JSON.parse(rawItem) : rawItem;
+          return {
+            ...item,
+            dictName: item.categoryName || item.dictName || '练习记录',
+            timeText: safeFormatTime(item.createdAt || item.created_at)
+          };
+        });
         this.setData({ records, isLoading: false });
         return;
       }
